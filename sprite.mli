@@ -1,4 +1,4 @@
-open Actors
+open Js_of_ocaml
 
 (* Represents an xy vector *)
 type xy = float * float (* x, y *)

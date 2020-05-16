@@ -1,3 +1,4 @@
+open Js_of_ocaml
 open Actors
 open Sprite
 open Object
@@ -17,7 +18,7 @@ let load _ =
   let canvas_id = "canvas" in
   let canvas =
     Js.Opt.get
-      (Js.Opt.bind ( Html.document##getElementById(Js.string canvas_id))
+      (Js.Opt.bind ( Html.document##getElementById (Js.string canvas_id))
         Html.CoerceTo.canvas)
       (fun () ->
         Printf.printf "cant find canvas %s \n" canvas_id;
@@ -42,9 +43,9 @@ let preload _ =
   List.map (fun img_src ->
     let img_src = root_dir ^ img_src in
     let img = (Html.createImg Html.document) in
-    img##src <- (Js.string img_src) ;
+    img##.src := (Js.string img_src) ;
     ignore(Html.addEventListener  img Html.Event.load
     (Html.handler (fun ev ->  inc_counter(); Js._true)) Js._true)) imgs
 
 
-let _ = Html.window##onload <- Html.handler (fun _ -> ignore (preload()); Js._true)
+let _ = Html.window##.onload := Html.handler (fun _ -> ignore (preload()); Js._true)

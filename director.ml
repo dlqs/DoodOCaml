@@ -1,3 +1,4 @@
+open Js_of_ocaml
 open Sprite
 open Object
 open Actors
@@ -241,7 +242,7 @@ let broad_phase collid all_collids state =
 (*narrow_phase of collision is used in order to continuously loop through
  *each of the collidable objects to constantly check if collisions are
  *occurring.*)
-let rec narrow_phase c cs state =
+let narrow_phase c cs state =
   let rec narrow_helper c cs state acc =
     match cs with
     | [] -> acc
@@ -364,8 +365,8 @@ let run_update_particle state part =
 let update_loop canvas (player,objs) map_dim =
   let scale = 1. in
   let ctx = canvas##getContext (Dom_html._2d_) in
-  let cwidth = (float_of_int canvas##width) /. scale in
-  let cheight = (float_of_int canvas##height) /. scale in
+  let cwidth = (float_of_int canvas##.width) /. scale in
+  let cheight = (float_of_int canvas##.height) /. scale in
   let viewport = Viewport.make (cwidth,cheight) map_dim in
   let state = {
       bgd = Sprite.make_bgd ctx;
@@ -377,7 +378,7 @@ let update_loop canvas (player,objs) map_dim =
       map = snd map_dim;
       game_over = false;
   } in
-  state.ctx##scale(scale,scale);
+  (state.ctx##scale scale scale);
   let rec update_helper time state player objs parts =
       if state.game_over = true then Draw.game_win state.ctx else begin
         collid_objs := [];
@@ -403,16 +404,16 @@ let update_loop canvas (player,objs) map_dim =
           List.iter (fun part -> run_update_particle state part) parts;
           Draw.fps canvas fps;
           Draw.hud canvas state.score state.coins;
-          ignore Dom_html.window##requestAnimationFrame(
-            Js.wrap_callback (fun (t:float) ->
-              update_helper t state player !collid_objs !particles))
+          ignore (Dom_html.window##requestAnimationFrame 
+            (Js.wrap_callback (fun (t:float) ->
+              update_helper t state player !collid_objs !particles));)
         end
       end
   in update_helper 0. state player objs []
 
 (* Keydown event handler translates a key press *)
 let keydown evt =
-  let () = match evt##keyCode with
+  let () = match evt##.keyCode with
   | 38 | 32 | 87 -> pressed_keys.up <- true
   | 39 | 68 -> pressed_keys.right <- true
   | 37 | 65 -> pressed_keys.left <- true
@@ -423,7 +424,7 @@ let keydown evt =
 
 (* Keyup event handler translates a key release *)
 let keyup evt =
-  let () = match evt##keyCode with
+  let () = match evt##.keyCode with
   | 38 | 32 | 87 -> pressed_keys.up <- false
   | 39 | 68 -> pressed_keys.right <- false
   | 37 | 65 -> pressed_keys.left <- false

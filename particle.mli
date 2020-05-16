@@ -1,5 +1,4 @@
-open Actors
-open Sprite
+open Js_of_ocaml
 
 (* Template params associated with a particle *)
 type part_params = {

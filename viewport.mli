@@ -1,5 +1,3 @@
-open Actors
-
 type viewport = {
   pos: Actors.xy;     (* Absolute position of viewport relative to map *)
   v_dim: Actors.xy;   (* Dimensions of viewport *)
