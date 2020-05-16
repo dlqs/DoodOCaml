@@ -138,14 +138,14 @@ let obj_at_pos dir (pos: xy) (collids: Object.collidable list)
             collids
 
 (* Returns whether the object at a given position is a block *) 
-let is_block dir pos collids =
+let _is_block dir pos collids =
   match obj_at_pos dir pos collids with
   | [] -> false
   | [Block (_,_,_)] -> true
   | _ -> false
 
 (* Returns whether the given object is a red koopa *)
-let is_rkoopa collid =
+let _is_rkoopa collid =
   match collid with
   | Enemy(RKoopa,_,_) -> true
   | _ -> false

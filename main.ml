@@ -1,7 +1,4 @@
 open Js_of_ocaml
-open Actors
-open Sprite
-open Object
 module Html = Dom_html
 module Pg = Procedural_generator
 

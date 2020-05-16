@@ -1,6 +1,5 @@
 open Js_of_ocaml
 open Object
-open Actors
 
 type obj_coord
 

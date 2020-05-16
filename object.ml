@@ -1,6 +1,5 @@
 open Sprite
 open Actors
-open Particle
 
 (*Variables*)
 let friction = 0.9
@@ -299,7 +298,7 @@ let evolve_block obj context =
   Block(QBlockUsed,new_spr,new_obj)
 
 (*Used for making a small Mario into a Big Mario*)
-let evolve_player (spr : Sprite.sprite) obj context =
+let _evolve_player (spr : Sprite.sprite) obj context =
   let (new_spr,new_obj) =
     make (SPlayer (BigM,Standing)) context (obj.pos.x, obj.pos.y) in
   normalize_pos new_obj.pos spr.params new_spr.params ;

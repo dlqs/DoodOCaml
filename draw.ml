@@ -1,11 +1,7 @@
 open Js_of_ocaml
-open Object
 open Sprite
 module Html = Dom_html
-let document = Html.document
 let jstr = Js.string
-
-let get_context canvas = canvas##getContext (Dom_html._2d_)
 
 let render_bbox sprite (posx,posy) =
   let context = sprite.context in
@@ -75,7 +71,7 @@ let game_loss ctx =
   (ctx##fillText (Js.string ("GAME OVER. You lose!")) 60. 128.);
   failwith "Game over."
 
-let draw_background_color canvas = failwith "todo"
-let debug f = Printf.ksprintf (fun s -> Firebug.console##log (jstr s)) f
-let alert f = Printf.ksprintf (fun s -> Dom_html.window##alert(Js.string s); failwith "poo") f
+let _draw_background_color canvas = failwith "todo"
+let _debug f = Printf.ksprintf (fun s -> Firebug.console##log (jstr s)) f
+let _alert f = Printf.ksprintf (fun s -> Dom_html.window##alert(Js.string s); failwith "poo") f
 
