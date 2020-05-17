@@ -261,21 +261,9 @@ let generate_helper (blockw:float) (blockh:float) (cx:float) (cy:float)
   let ground_blocks = generate_ground blockw blockh 0. [] in
   let obj_converted_ground_blocks = convert_to_block_obj ground_blocks
     context in
-  let block_locations = block_locs@ground_blocks in
   let all_blocks = obj_converted_block_locs@obj_converted_ground_blocks in
-  let enemy_locs = generate_enemies blockw blockh 0. 0. block_locations in
-  let obj_converted_enemies = convert_to_enemy_obj enemy_locs context in
-  let coin_locs = generate_coins converted_block_locs in
-  let undup_coin_locs = trim_edges(avoid_overlap coin_locs converted_block_locs)
-    blockw blockh in
-  let converted_block_coin_locs = converted_block_locs@coin_locs in
-  let enemy_block_locs = generate_block_enemies converted_block_locs in
-  let undup_enemy_block_locs = avoid_overlap enemy_block_locs
-    converted_block_coin_locs in
-  let obj_enemy_blocks = convert_to_enemy_obj undup_enemy_block_locs context in
-  let coin_objects = convert_to_coin_obj undup_coin_locs context in
   let obj_panel = generate_panel context blockw blockh in
-  all_blocks@obj_converted_enemies@coin_objects@obj_enemy_blocks@[obj_panel]
+  all_blocks@[obj_panel]
 
 (*Main function called to procedurally generate the level map. w and h args
 * are in pixel form. Converts to block form to call generate_helper. Spawns
