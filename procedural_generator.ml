@@ -268,7 +268,7 @@ let generate_helper (blockw:float) (blockh:float) (cx:float) (cy:float)
 
 let generate_helper (blockw:float) (blockh:float) (cx:float) (cy:float)
             (context:Dom_html.canvasRenderingContext2D Js.t) : collidable list =
-  let ground_blocks = generate_ground blockw blockh (-200.) [] in
+  let ground_blocks = generate_ground blockw blockh (0.) [] in
   let obj_converted_ground_blocks = convert_to_block_obj ground_blocks
     context in
   obj_converted_ground_blocks
