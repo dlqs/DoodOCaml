@@ -205,12 +205,13 @@ let generate_panel (context:Dom_html.canvasRenderingContext2D Js.t)
 * 1/10 chance that a ground block is skipped each call to create holes.*)
 let rec generate_ground (blockw:float) (blockh:float) (inc:float)
                         (acc: obj_coord list) : obj_coord list =
+  print_endline (string_of_float inc);
   if(inc > blockw) then acc
   else
     if(inc > 10.) then
       let skip = Random.int 10 in
       let newacc = acc@[(4, (inc*. 16.,blockh *. 16.))] in
-      if (skip = 7 && blockw-.inc>32.)
+      if (skip = 7 && blockw -. inc > 32.)
         then generate_ground blockw blockh (inc +. 1.) acc
       else  generate_ground blockw blockh (inc +. 1.) newacc
     else let newacc = acc@[(4, (inc*. 16.,blockh *. 16.))] in
@@ -267,7 +268,7 @@ let generate_helper (blockw:float) (blockh:float) (cx:float) (cy:float)
 
 let generate_helper (blockw:float) (blockh:float) (cx:float) (cy:float)
             (context:Dom_html.canvasRenderingContext2D Js.t) : collidable list =
-  let ground_blocks = generate_ground blockw blockh 0. [] in
+  let ground_blocks = generate_ground blockw blockh (-200.) [] in
   let obj_converted_ground_blocks = convert_to_block_obj ground_blocks
     context in
   obj_converted_ground_blocks
@@ -283,6 +284,13 @@ let generate (w:float) (h:float)
   let collide_list = generate_helper blockw blockh 0. 0. context in
   let player = Object.spawn (SPlayer(SmallM,Standing)) context (100.,224.) in
   (player, collide_list)
+
+let continually_generate (base:float) (offset:float)
+      (context:Dom_html.canvasRenderingContext2D Js.t)
+  : collidable list = 
+  let ground_blocks = generate_ground 32. 15. 1024. [] in
+  let obj_converted_ground_blocks = convert_to_block_obj ground_blocks context in
+  obj_converted_ground_blocks
 
 (*Makes sure level map is uniquely generated at each call.*)
 let init () =

@@ -4,7 +4,7 @@ module Pg = Procedural_generator
 
 let loadCount =  ref 0
 let imgsToLoad = 4
-let level_width = 2400.
+let level_width = 512.
 let level_height = 256.
 
 (*Canvas is chosen from the index.html file. The context is obtained from

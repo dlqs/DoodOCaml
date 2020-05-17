@@ -26,7 +26,8 @@ type st = {
   bgd: sprite;
   ctx: Dom_html.canvasRenderingContext2D Js.t;
   vpt: viewport;
-  map: float;
+  base: float;
+  map_offset: float;
   mutable score: int;
   mutable coins: int;
   mutable multiplier: int;
@@ -306,7 +307,7 @@ let update_collidable state (collid:Object.collidable) all_collids =
       out_of_viewport_below state.vpt obj.pos.y in
   if not obj.kill &&  viewport_filter then begin
     obj.grounded <- false;
-    Object.process_obj obj state.map;
+    (* Object.process_obj obj state.map;*)
     (* Run collision detection if moving object*)
     let evolved = check_collisions collid all_collids state in
     (* Render and update animation *)
@@ -360,6 +361,12 @@ let run_update_particle state part =
   Draw.render part.params.sprite (x,y);
   if not part.kill then particles := part :: !particles
 
+let run_update_map base offset context objs =
+  let new_objs = Procedural_generator.continually_generate base offset context in
+  collid_objs := !collid_objs @ new_objs;
+  ()
+  
+
 (*update_loop is constantly being called to check for collisions and to
  *update each of the objects in the game.*)
 let update_loop canvas (player,objs) map_dim =
@@ -375,9 +382,11 @@ let update_loop canvas (player,objs) map_dim =
       score = 0;
       coins = 0;
       multiplier = 1;
-      map = snd map_dim;
+      base = 32.;
+      map_offset = 32.;
       game_over = false;
   } in
+  (ignore (run_update_map state.base state.map_offset state.ctx objs));
   (state.ctx##scale scale scale);
   let rec update_helper time state player objs parts =
       if state.game_over = true then Draw.game_win state.ctx else begin
@@ -390,6 +399,7 @@ let update_loop canvas (player,objs) map_dim =
         Draw.clear_canvas canvas;
 
         let player = run_update_collid state player objs in
+        print_endline ("mario pos"^(string_of_float (Object.get_obj player).pos.x));
 
         if (get_obj player).kill = true 
         then Draw.game_loss state.ctx else begin
