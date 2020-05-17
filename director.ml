@@ -396,7 +396,6 @@ let update_loop canvas (player,objs) map_dim =
           let state = {
             state with vpt = Viewport.update state.vpt (get_obj player).pos} in
           List.iter (fun obj -> ignore (run_update_collid state obj objs)) objs;
-          List.iter (fun part -> run_update_particle state part) parts;
           Draw.fps canvas fps;
           Draw.hud canvas state.score state.coins;
           ignore (Dom_html.window##requestAnimationFrame 
