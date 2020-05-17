@@ -389,11 +389,6 @@ let update_loop canvas (player,objs) map_dim =
 
         Draw.clear_canvas canvas;
 
-        (* Parallax background *)
-        let vpos_x_int = int_of_float (state.vpt.pos.x /. 5.)  in
-        let bgd_width = int_of_float (fst state.bgd.params.frame_size) in
-        Draw.draw_bgd state.bgd (float_of_int (vpos_x_int mod bgd_width));
-
         let player = run_update_collid state player objs in
 
         if (get_obj player).kill = true 
