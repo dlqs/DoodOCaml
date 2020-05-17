@@ -250,7 +250,7 @@ let rec convert_to_coin_obj (lst:obj_coord list)
 
 (*Procedurally generates a list of collidables given canvas width, height and
 * context. Arguments block width (blockw) and block height (blockh) are in
-* block form, not pixels.*)
+* block form, not pixels.
 let generate_helper (blockw:float) (blockh:float) (cx:float) (cy:float)
             (context:Dom_html.canvasRenderingContext2D Js.t) : collidable list =
   let block_locs = generate_block_locs blockw blockh 0. 0. [] in
@@ -263,7 +263,14 @@ let generate_helper (blockw:float) (blockh:float) (cx:float) (cy:float)
     context in
   let all_blocks = obj_converted_block_locs@obj_converted_ground_blocks in
   let obj_panel = generate_panel context blockw blockh in
-  all_blocks@[obj_panel]
+  all_blocks@[obj_panel]*)
+
+let generate_helper (blockw:float) (blockh:float) (cx:float) (cy:float)
+            (context:Dom_html.canvasRenderingContext2D Js.t) : collidable list =
+  let ground_blocks = generate_ground blockw blockh 0. [] in
+  let obj_converted_ground_blocks = convert_to_block_obj ground_blocks
+    context in
+  obj_converted_ground_blocks
 
 (*Main function called to procedurally generate the level map. w and h args
 * are in pixel form. Converts to block form to call generate_helper. Spawns
