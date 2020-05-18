@@ -50,3 +50,7 @@ val transform_enemy : Actors.enemy_typ -> sprite -> Actors.dir_1d -> unit
 (* Updates the sprite's animation *)
 val update_animation : sprite -> unit
 
+val get_width : sprite -> float
+
+val get_height : sprite -> float
+

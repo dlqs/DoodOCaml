@@ -123,6 +123,10 @@ let make_particle = function
   | Score4000 -> setup_sprite "score.png" 1 0 (14.,9.) (13.,18.)
   | Score8000 -> setup_sprite "score.png" 1 0 (14.,9.) (13.,27.)
 
+let make_tile = function
+  | Green -> setup_sprite "green_tile.png" 1 0 (40.,12.) (0.,0.)
+  
+
 (*Calls to set sprite for either big or small mario.*)
 let make_player pt spr_type =
   match pt with
@@ -136,6 +140,7 @@ let make_type typ (dir : Actors.dir_1d) =
   | SEnemy t -> make_enemy (t,dir)
   | SItem t -> make_item t
   | SBlock t -> make_block t
+  | STile t -> make_tile t
 
 (* Makes a sprite from provided [params]. *)
 let make_from_params params context =
@@ -181,3 +186,10 @@ let update_animation (spr: sprite) =
     if spr.params.loop then
     spr.frame := (!(spr.frame) + 1) mod spr.params.max_frames
   end else spr.ticks := curr_ticks + 1
+
+let get_width (spr: sprite) =
+  fst spr.params.frame_size
+
+let get_height (spr: sprite) =
+  snd spr.params.frame_size
+

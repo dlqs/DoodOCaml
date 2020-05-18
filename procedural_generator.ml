@@ -28,7 +28,13 @@ let choose_enemy_typ (typ:int) : enemy_typ =
   |0 -> RKoopa
   |1 -> GKoopa
   |2 -> Goomba
-  |_ -> failwith "Shouldn't reach here"
+  |_ -> failwith "Invalid enemy type"
+
+(*Chooses what type of enemy should be instantiated given typ number*)
+let choose_tile_typ (typ:int) : tile_typ =
+  match typ with
+  |0 -> Green
+  |_ -> failwith "Invalid tile type"
 
 (*Chooses what type of block should be instantiated given typ number*)
 let choose_sblock_typ (typ:int) : block_typ =
@@ -38,7 +44,7 @@ let choose_sblock_typ (typ:int) : block_typ =
   |2 -> Cloud
   |3 -> QBlock Mushroom
   |4 -> Ground
-  |_ -> failwith "Shouldn't reach here"
+  |_ -> failwith "Invalod sblock type"
 
 (*Optimizes lst such that there are no two items in the list that have the same
 * coordinates. If there is one, it is removed.*)
@@ -114,38 +120,19 @@ let rec generate_coins (block_coord: obj_coord list) : obj_coord list =
 * 3. Else call helper methods to created block formations and return obj_coord
 *    list.
 **)
-let choose_block_pattern (blockw:float) (blockh: float) (cbx:float) (cby:float)
+let choose_block_pattern (blockw:float) (blockh: float) (x:float) (y:float)
                          (prob:int) : obj_coord list=
-  if(cbx > blockw || cby > blockh) then []
-  else
-    let block_typ = Random.int 4 in
-    let stair_typ = Random.int 2 in
-    let life_block_chance = Random.int 5 in
-    let middle_block = if(life_block_chance = 0) then 3 else stair_typ in
-    let obj_coord =
-    match prob with
-    |0 -> if(blockw -. cbx > 2.) then [(stair_typ, (cbx, cby));
-            (middle_block,(cbx +. 1., cby));(stair_typ,(cbx +. 2., cby))]
-          else if (blockw -. cbx > 1.) then [(block_typ,(cbx, cby));
-            (block_typ,(cbx +. 1., cby))]
-          else [(block_typ,(cbx, cby))]
-    |1 -> let num_clouds = (Random.int 5) + 5 in
-          if(cby < 5.) then generate_clouds cbx cby 2 num_clouds
-          else []
-    |2 -> if(blockh-.cby = 1.) then generate_ground_stairs cbx cby stair_typ
-          else []
-    |3 -> if(stair_typ = 0 && blockh -. cby > 3.) then
-          generate_airdown_stairs cbx cby stair_typ
-          else if (blockh-.cby>2.) then generate_airup_stairs cbx cby stair_typ
-          else [(stair_typ,(cbx, cby))]
-    |4 -> if ((cby +. 3.) -. blockh = 2.) then [(stair_typ,(cbx, cby))]
-          else if ((cby +. 3.) -. blockh = 1.) then [(stair_typ, (cbx,cby));
-          (stair_typ, (cbx, cby +. 1.))]
-          else [(stair_typ,(cbx, cby)); (stair_typ,(cbx, cby +. 1.));
-          (stair_typ,(cbx, cby +. 2.))]
-    |5 -> [(3,(cbx, cby))]
-    |_ -> failwith "Shouldn't reach here" in
-    obj_coord
+  let block_typ = Random.int 4 in
+  let stair_typ = Random.int 2 in
+  let life_block_chance = Random.int 5 in
+  let middle_block = if(life_block_chance = 0) then 3 else stair_typ in
+  let obj_coord =
+  match prob with
+  |1 -> let num_clouds = (Random.int 5) + 5 in
+        if(x < 5.) then generate_clouds x y 2 num_clouds
+        else []
+  |_ -> failwith "Shouldn't reach here" in
+  obj_coord
 
 (*Generates a list of enemies to be placed on the ground.*)
 let rec generate_enemies (blockw: float) (blockh: float) (cbx: float)
@@ -176,23 +163,23 @@ let rec generate_block_enemies (block_coord: obj_coord list) : obj_coord list =
             else generate_block_enemies t
 
 (*Generates an obj_coord list (typ, coordinates) of blocks to be placed.*)
-let rec generate_block_locs (blockw: float) (blockh: float) (cbx: float)
-                    (cby: float) (acc: obj_coord list) : obj_coord list =
-  if(blockw-.cbx<33.) then acc
-  else if (cby > (blockh-. 1.)) then
-    generate_block_locs blockw blockh (cbx+.1.) 0. acc
-  else if(mem_loc (cbx, cby) acc || cby = 0.) then
-    generate_block_locs blockw blockh cbx (cby+.1.) acc
+let rec generate_block_locs (blockw: float) (blockh: float)
+          (x: float) (y: float) (y1: float) (acc: obj_coord list) : obj_coord list =
+  if(blockw< x +. 33.) then acc
+  else if (y >= y1) then
+    generate_block_locs blockw blockh (x +. 1.) 0. y1 acc
+  else if mem_loc (x, y) acc then
+    generate_block_locs blockw blockh x (y +. 1.) y1 acc
   else
     let prob = Random.int 100 in
     let block_prob = 5 in
       if(prob < block_prob) then
-        let newacc = choose_block_pattern blockw blockh cbx cby prob in
+        let newacc = choose_block_pattern blockw blockh x y prob in
         let undup_lst = avoid_overlap newacc acc in
         let called_acc = acc@undup_lst in
-        generate_block_locs blockw blockh cbx (cby+.1.) called_acc
-      else generate_block_locs blockw blockh cbx (cby+.1.) acc
-
+        generate_block_locs blockw blockh x (y +. 1.) y1 called_acc
+      else generate_block_locs blockw blockh x (y +. 1.) y1 acc
+  
 (*Generates the ending item panel at the end of the level. Games ends upon
 * collision with player.*)
 let generate_panel (context:Dom_html.canvasRenderingContext2D Js.t)
@@ -205,17 +192,19 @@ let generate_panel (context:Dom_html.canvasRenderingContext2D Js.t)
 * 1/10 chance that a ground block is skipped each call to create holes.*)
 let rec generate_ground (blockw:float) (blockh:float) (inc:float)
                         (acc: obj_coord list) : obj_coord list =
-  print_endline (string_of_float inc);
   if(inc > blockw) then acc
   else
-    if(inc > 10.) then
-      let skip = Random.int 10 in
-      let newacc = acc@[(4, (inc*. 16.,blockh *. 16.))] in
-      if (skip = 7 && blockw -. inc > 32.)
-        then generate_ground blockw blockh (inc +. 1.) acc
-      else  generate_ground blockw blockh (inc +. 1.) newacc
-    else let newacc = acc@[(4, (inc*. 16.,blockh *. 16.))] in
-      generate_ground blockw blockh (inc +. 1.) newacc
+    let newacc = acc@[(4, (inc*. 16.,blockh *. 16.))] in
+    generate_ground blockw blockh (inc +. 1.) newacc
+
+let rec convert_to_tile_obj (lst:obj_coord list)
+  (context:Dom_html.canvasRenderingContext2D Js.t) : collidable list =
+  match lst with
+  |[] -> []
+  |h::t ->
+    let stile_typ = choose_tile_typ 0 in
+    let ob = Object.spawn (STile stile_typ) context (snd h) in
+    [ob]@(convert_to_tile_obj t context)
 
 (*Converts the obj_coord list called by generate_block_locs to a list of objects
 * with the coordinates given from the obj_coord list. *)
@@ -276,22 +265,31 @@ let generate_helper (blockw:float) (blockh:float) (cx:float) (cy:float)
 (*Main function called to procedurally generate the level map. w and h args
 * are in pixel form. Converts to block form to call generate_helper. Spawns
 * the list of collidables received from generate_helper to display on canvas.*)
-let generate (w:float) (h:float)
+let generate_initial (w:float) (base:float)
                     (context:Dom_html.canvasRenderingContext2D Js.t) :
                     (collidable * collidable list) =
+  Random.self_init();
   let blockw = w/.16. in
-  let blockh = (h/.16.) -. 1. in
-  let collide_list = generate_helper blockw blockh 0. 0. context in
-  let player = Object.spawn (SPlayer(SmallM,Standing)) context (100.,224.) in
-  (player, collide_list)
+  let blockh = (256./.16.) -. 1. in
+  let ground_blocks = generate_ground blockw blockh (0.) [] in
+  let obj_converted_ground_blocks = convert_to_block_obj ground_blocks context in
+  let player = Object.spawn (SPlayer(SmallM,Standing)) context (w /. 2., base) in
+  (player, obj_converted_ground_blocks)
 
-let continually_generate (base:float) (offset:float)
+
+let rec generate_tile_layer (currW:float) (limitW:float) (currY:float) (acc: obj_coord list)
+        : obj_coord list =
+  if (currW +. 8. >= limitW) then acc else
+  let tile = (5, (currW, currY)) in
+  generate_tile_layer (currW +. 40.) limitW currY (tile::acc)
+
+(* Generate tiles between baseY and baseY+offsetY *)
+let continually_generate (cw:float)(baseY:float) (offsetY:float)
       (context:Dom_html.canvasRenderingContext2D Js.t)
   : collidable list = 
-  let ground_blocks = generate_ground 32. 15. 1024. [] in
-  let obj_converted_ground_blocks = convert_to_block_obj ground_blocks context in
-  obj_converted_ground_blocks
-
-(*Makes sure level map is uniquely generated at each call.*)
-let init () =
-  Random.self_init();
+  let rec generate_layer currY limitY (acc:obj_coord list) =
+    if currY >= limitY then acc else
+      let tiles = generate_tile_layer 0. cw currY [] in
+      generate_layer (currY +. 16.) limitY tiles@acc
+  in let objs = generate_layer baseY (baseY +. offsetY) [] in
+  (convert_to_tile_obj objs context)

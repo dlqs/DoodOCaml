@@ -19,6 +19,9 @@ type pl_typ =
   | BigM
   | SmallM
 
+type tile_typ =
+  | Green
+
 type item_typ =
   | Mushroom
   | FireFlower
@@ -62,16 +65,10 @@ type part_typ =
   | Score4000
   | Score8000
 
-(*type unbblock_typ =
-  | Wood
-  | Earth
-  | Brick
-| *)
-
 type spawn_typ =
   | SPlayer of pl_typ * player_typ
   | SEnemy of enemy_typ
   | SItem of item_typ
   | SBlock of block_typ
-  (*| SGround of ground_typ*)
+  | STile of tile_typ
 

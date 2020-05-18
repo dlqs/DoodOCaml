@@ -35,7 +35,7 @@ type collidable =
   | Enemy of enemy_typ * sprite * obj
   | Item of item_typ * sprite * obj
   | Block of block_typ * sprite * obj
-
+  | Tile of tile_typ * sprite * obj
 
 (* Returns the sprite associated with the object *)
 val get_sprite : collidable -> Sprite.sprite

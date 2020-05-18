@@ -4,6 +4,7 @@ open Object
 open Actors
 open Viewport
 open Particle
+module Pg = Procedural_generator
 
 (* Represents the values of relevant key bindings. *)
 type keys = {
@@ -361,20 +362,22 @@ let run_update_particle state part =
   Draw.render part.params.sprite (x,y);
   if not part.kill then particles := part :: !particles
 
-let run_update_map base offset context objs =
-  let new_objs = Procedural_generator.continually_generate base offset context in
+let run_update_map cwidth base offset context objs =
+  let new_objs = Procedural_generator.continually_generate cwidth base offset context in
   collid_objs := !collid_objs @ new_objs;
   ()
   
 
 (*update_loop is constantly being called to check for collisions and to
  *update each of the objects in the game.*)
-let update_loop canvas (player,objs) map_dim =
+let update_loop canvas =
   let scale = 1. in
+  let base = 32. in
   let ctx = canvas##getContext (Dom_html._2d_) in
   let cwidth = (float_of_int canvas##.width) /. scale in
   let cheight = (float_of_int canvas##.height) /. scale in
-  let viewport = Viewport.make (cwidth,cheight) map_dim in
+  let viewport = Viewport.make (cwidth,cheight) (512., 256.) in
+  let (player, objs) = Pg.generate_initial cwidth base ctx in
   let state = {
       bgd = Sprite.make_bgd ctx;
       vpt = Viewport.update viewport (get_obj player).pos;
@@ -382,11 +385,11 @@ let update_loop canvas (player,objs) map_dim =
       score = 0;
       coins = 0;
       multiplier = 1;
-      base = 32.;
+      base = base;
       map_offset = 32.;
       game_over = false;
   } in
-  (ignore (run_update_map state.base state.map_offset state.ctx objs));
+  (ignore (run_update_map cwidth state.base state.map_offset state.ctx objs));
   (state.ctx##scale scale scale);
   let rec update_helper time state player objs parts =
       if state.game_over = true then Draw.game_win state.ctx else begin
@@ -405,9 +408,12 @@ let update_loop canvas (player,objs) map_dim =
         then Draw.game_loss state.ctx else begin
           let state = {
             state with vpt = Viewport.update state.vpt (get_obj player).pos} in
+
           List.iter (fun obj -> ignore (run_update_collid state obj objs)) objs;
+
           Draw.fps canvas fps;
           Draw.hud canvas state.score state.coins;
+
           ignore (Dom_html.window##requestAnimationFrame 
             (Js.wrap_callback (fun (t:float) ->
               update_helper t state player !collid_objs !particles));)

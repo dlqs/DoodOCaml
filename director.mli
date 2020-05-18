@@ -1,8 +1,6 @@
 open Js_of_ocaml
 (* Initiates the main game loop *)
 val update_loop : Dom_html.canvasElement Js.t
-                  -> (Object.collidable * Object.collidable list)
-                  -> float*float
                   -> unit
 
 (* Keydown event handler function *)

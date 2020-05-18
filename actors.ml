@@ -16,6 +16,9 @@ type pl_typ =
   | BigM
   | SmallM
 
+type tile_typ =
+  | Green
+
 type item_typ =
   | Mushroom
   | FireFlower
@@ -62,3 +65,4 @@ type spawn_typ =
   | SEnemy of enemy_typ
   | SItem of item_typ
   | SBlock of block_typ
+  | STile of tile_typ

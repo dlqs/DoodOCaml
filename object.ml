@@ -43,6 +43,7 @@ type collidable =
   | Enemy of enemy_typ * sprite * obj
   | Item of item_typ * sprite * obj
   | Block of block_typ * sprite * obj
+  | Tile of tile_typ * sprite * obj
 
 
 (*setup_obj is used to set gravity and speed, with default values true and 1.*)
@@ -71,6 +72,9 @@ let make_item = function
   | Star -> setup_obj ()
   | Coin -> setup_obj ~g:false ()
 
+let make_tile = function
+  | Green -> setup_obj ~g:false ()
+
 let make_enemy = function
   | Goomba -> setup_obj ()
   | GKoopa -> setup_obj ()
@@ -92,6 +96,7 @@ let make_type = function
   | SEnemy t -> make_enemy t
   | SItem t -> make_item t
   | SBlock t -> make_block t
+  | STile t -> make_tile t
 
 (*Used in object creation and to compare two objects.*)
 let new_id () =
@@ -132,13 +137,14 @@ let spawn spawnable context (posx, posy) =
       Enemy(t,spr,obj)
   | SItem t -> Item(t,spr,obj)
   | SBlock t -> Block(t,spr,obj)
+  | STile t -> Tile(t,spr,obj)
 
 (*Helper methods for getting sprites and objects from their collidables*)
 let get_sprite = function
-  | Player (_,s,_) | Enemy (_,s, _) | Item (_,s, _) | Block (_,s, _)  -> s
+  | Player (_,s,_) | Enemy (_,s, _) | Item (_,s, _) | Block (_,s, _) | Tile (_,s,_) -> s
 
 let get_obj = function
-  | Player (_,_,o) | Enemy (_,_,o) | Item (_,_,o) | Block (_,_,o) -> o
+  | Player (_,_,o) | Enemy (_,_,o) | Item (_,_,o) | Block (_,_,o) | Tile (_,_,o) -> o
 
 let is_player = function
   | Player(_,_,_) -> true
