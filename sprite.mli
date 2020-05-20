@@ -1,12 +1,12 @@
 open Js_of_ocaml
 
 (* Represents an xy vector *)
-type xy = float * float (* x, y *)
+type xy = int * int (* x, y *)
 
 (* Inherent sprite parameters from which to create the sprite *)
 type sprite_params =
   {
-    max_frames: int;
+   max_frames: int;
     max_ticks: int;
     img_src: string;
     frame_size: xy;
@@ -32,6 +32,8 @@ val setup_sprite : ?loop:bool -> ?bb_off:float*float-> ?bb_sz:float*float
         -> string -> int -> int -> xy -> xy 
                           -> sprite_params 
 
+val get_s_frame_size: Actors.spawn_typ -> xy
+
 (* Creates a sprite given the actor type *)
 val make : Actors.spawn_typ -> Actors.dir_1d 
    -> Dom_html.canvasRenderingContext2D Js.t
@@ -40,17 +42,6 @@ val make : Actors.spawn_typ -> Actors.dir_1d
 (* Make a background *)
 val make_bgd : Dom_html.canvasRenderingContext2D Js.t  -> sprite
 
-(* Make a particle corresponding to the given type *)
-val make_particle : Actors.part_typ 
-    -> Dom_html.canvasRenderingContext2D Js.t -> sprite
-
-(* Transform an enemy sprite based on direction *)
-val transform_enemy : Actors.enemy_typ -> sprite -> Actors.dir_1d -> unit
-
 (* Updates the sprite's animation *)
 val update_animation : sprite -> unit
-
-val get_width : sprite -> float
-
-val get_height : sprite -> float
 

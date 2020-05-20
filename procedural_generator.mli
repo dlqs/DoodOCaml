@@ -9,3 +9,5 @@ val generate_initial : float -> float -> Dom_html.canvasRenderingContext2D Js.t 
 
 val continually_generate : float -> float -> float -> Dom_html.canvasRenderingContext2D Js.t ->
                collidable list
+
+val generate: int * int -> int * int -> obj_coord list

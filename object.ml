@@ -2,47 +2,25 @@ open Sprite
 open Actors
 
 (*Variables*)
-let friction = 0.9
 let gravity = 0.2
-let max_y_vel = 4.5
-let player_speed = 2.8
 let player_jump = 5.7
-let player_max_jump = -6.
-let dampen_jump = 4.
-let invuln = 60
 
 type aabb = {
-  center: xy;
-  half: xy;
-}
-
-type obj_params = {
-  has_gravity: bool;
-  speed: float;
-}
+    center: xy;
+    half: xy;
+  }
 
 let id_counter = ref min_int
 
 type obj = {
-  params: obj_params;
-  pos: xy;
-  vel: xy;
-  id: int;
-  mutable jumping: bool;
-  mutable grounded: bool;
-  mutable dir: Actors.dir_1d;
-  mutable invuln: int;
-  mutable kill: bool;
-  mutable health: int;
-  mutable crouch: bool;
-  mutable score: int;
-}
+    id: int;
+    has_gravity: bool;
+    pos: xy;
+    vel: xy;
+  }
 
 type collidable =
   | Player of pl_typ * sprite * obj
-  | Enemy of enemy_typ * sprite * obj
-  | Item of item_typ * sprite * obj
-  | Block of block_typ * sprite * obj
   | Tile of tile_typ * sprite * obj
 
 
@@ -112,19 +90,19 @@ let make ?id:(id=None) ?dir:(dir=Left) spawnable context (posx, posy) =
     | Some n -> n
   in
   let obj = {
-    params;
-    pos = {x=posx; y=posy};
-    vel = {x=0.0;y=0.0};
-    id;
-    jumping = false;
-    grounded = false;
-    dir;
-    invuln = 0;
-    kill = false;
-    health = 1;
-    crouch = false;
-    score = 0;
-  } in
+      params;
+      pos = {x=posx; y=posy};
+      vel = {x=0.0;y=0.0};
+      id;
+      jumping = false;
+      grounded = false;
+      dir;
+      invuln = 0;
+      kill = false;
+      health = 1;
+      crouch = false;
+      score = 0;
+    } in
   (spr,obj)
 
 (*spawn returns a new collidable*)
@@ -133,8 +111,8 @@ let spawn spawnable context (posx, posy) =
   match spawnable with
   | SPlayer(typ,t) -> Player(typ,spr,obj)
   | SEnemy t ->
-      set_vel_to_speed obj;
-      Enemy(t,spr,obj)
+     set_vel_to_speed obj;
+     Enemy(t,spr,obj)
   | SItem t -> Item(t,spr,obj)
   | SBlock t -> Block(t,spr,obj)
   | STile t -> Tile(t,spr,obj)
@@ -161,37 +139,37 @@ let update_player_keys (player : obj) (controls : controls) : unit =
   let lr_acc = player.vel.x *. 0.2 in
   match controls with
   | CLeft ->
-    if not player.crouch then begin
-      if player.vel.x > ~-.(player.params.speed)
-      then player.vel.x <- player.vel.x -. (0.4 -. lr_acc);
-      player.dir <- Left
-    end
+     if not player.crouch then begin
+         if player.vel.x > ~-.(player.params.speed)
+         then player.vel.x <- player.vel.x -. (0.4 -. lr_acc);
+         player.dir <- Left
+       end
   | CRight ->
-    if not player.crouch then begin
-      if player.vel.x < player.params.speed
-      then player.vel.x <- player.vel.x +. (0.4 +. lr_acc);
-      player.dir <- Right
-    end
+     if not player.crouch then begin
+         if player.vel.x < player.params.speed
+         then player.vel.x <- player.vel.x +. (0.4 +. lr_acc);
+         player.dir <- Right
+       end
   | CUp ->
-    if (not player.jumping && player.grounded) then begin
-      player.jumping <- true;
-      player.grounded <- false;
-      player.vel.y <-
-        max (player.vel.y -.(player_jump +. abs_float player.vel.x *. 0.25))
-            player_max_jump
-    end
+     if (not player.jumping && player.grounded) then begin
+         player.jumping <- true;
+         player.grounded <- false;
+         player.vel.y <-
+           max (player.vel.y -.(player_jump +. abs_float player.vel.x *. 0.25))
+             player_max_jump
+       end
   | CDown ->
-    if (not player.jumping && player.grounded) then
-      player.crouch <- true
+     if (not player.jumping && player.grounded) then
+       player.crouch <- true
 
 (*Used for sprite changing. If sprites change to different dimensions as a result
  *of some action, the new sprite must be normalized so that things aren't
  *jumpy*)
 let normalize_pos pos (p1:Sprite.sprite_params) (p2:Sprite.sprite_params) =
-    let (box1,boy1) = p1.bbox_offset and (box2,boy2) = p2.bbox_offset in
-    let (bw1,bh1) = p1.bbox_size and (bw2,bh2) = p2.bbox_size in
-    pos.x <- pos.x -. (bw2 +. box2) +. (bw1 +. box1);
-    pos.y <- pos.y -. (bh2 +. boy2) +. (bh1 +. boy1)
+  let (box1,boy1) = p1.bbox_offset and (box2,boy2) = p2.bbox_offset in
+  let (bw1,bh1) = p1.bbox_size and (bw2,bh2) = p2.bbox_size in
+  pos.x <- pos.x -. (bw2 +. box2) +. (bw1 +. box1);
+  pos.y <- pos.y -. (bh2 +. boy2) +. (bh1 +. boy1)
 
 (*Update player is constantly being called to check for if big or small
  *Mario sprites/collidables should be used.*)
@@ -206,7 +184,7 @@ let update_player player keys context =
   if not prev_jumping && player.jumping
   then Some (pl_typ, (Sprite.make (SPlayer(pl_typ,Jumping)) player.dir context))
   else if prev_dir<>player.dir || (prev_vx=0. && (abs_float player.vel.x) > 0.)
-          && not player.jumping
+                                  && not player.jumping
   then Some (pl_typ, (Sprite.make (SPlayer(pl_typ,Running)) player.dir context))
   else if prev_dir <> player.dir && player.jumping && prev_jumping
   then Some (pl_typ, (Sprite.make (SPlayer(pl_typ,Jumping)) player.dir context))
@@ -245,9 +223,9 @@ let collide_block ?check_x:(check_x=true) dir obj =
   match dir with
   | North -> obj.vel.y <- -0.001
   | South ->
-      obj.vel.y <- 0.;
-      obj.grounded <- true;
-      obj.jumping <- false;
+     obj.vel.y <- 0.;
+     obj.grounded <- true;
+     obj.jumping <- false;
   | East | West -> if check_x then obj.vel.x <- 0.
 
 (*Simple helper method that reverses the direction in question*)
@@ -267,19 +245,19 @@ let reverse_left_right obj =
 let evolve_enemy player_dir typ (spr:Sprite.sprite) obj context =
   match typ with
   | GKoopa ->
-      let (new_spr,new_obj) =
-        make ~dir:obj.dir (SEnemy GKoopaShell) context (obj.pos.x,obj.pos.y) in
-      normalize_pos new_obj.pos spr.params new_spr.params;
-      Some(Enemy(GKoopaShell,new_spr,new_obj))
+     let (new_spr,new_obj) =
+       make ~dir:obj.dir (SEnemy GKoopaShell) context (obj.pos.x,obj.pos.y) in
+     normalize_pos new_obj.pos spr.params new_spr.params;
+     Some(Enemy(GKoopaShell,new_spr,new_obj))
   | RKoopa ->
-      let (new_spr,new_obj) =
-        make ~dir:obj.dir (SEnemy RKoopaShell) context (obj.pos.x,obj.pos.y) in
-      normalize_pos new_obj.pos spr.params new_spr.params;
-      Some(Enemy(RKoopaShell,new_spr,new_obj))
+     let (new_spr,new_obj) =
+       make ~dir:obj.dir (SEnemy RKoopaShell) context (obj.pos.x,obj.pos.y) in
+     normalize_pos new_obj.pos spr.params new_spr.params;
+     Some(Enemy(RKoopaShell,new_spr,new_obj))
   | GKoopaShell |RKoopaShell ->
-      obj.dir <- player_dir;
-      if obj.vel.x <> 0. then obj.vel.x <- 0. else set_vel_to_speed obj;
-      None
+     obj.dir <- player_dir;
+     if obj.vel.x <> 0. then obj.vel.x <- 0. else set_vel_to_speed obj;
+     None
   | _ -> obj.kill <- true; None
 
 (*Updates the direction of the sprite. *)
@@ -293,8 +271,8 @@ let rev_dir o t (s:sprite) =
 let dec_health obj =
   let health = obj.health - 1 in
   if health = 0 then obj.kill <- true else
-  if obj.invuln = 0 then
-    obj.health <- health
+    if obj.invuln = 0 then
+      obj.health <- health
 
 (*Used for deleting a block and replacing it with a used block*)
 let evolve_block obj context =
@@ -334,11 +312,11 @@ let get_aabb obj  =
 let col_bypass c1 c2 =
   let o1 = get_obj c1 and o2 = get_obj c2 in
   let ctypes = match(c1,c2) with
-  | (Item(_,_,_), Enemy(_,_,_))
-  | (Enemy(_,_,_), Item(_,_,_))
-  | (Item(_,_,_), Item(_,_,_)) -> true
-  | (Player(_,_,o1), Enemy(_,_,_)) -> if o1.invuln > 0 then true else false
-  | _ -> false
+    | (Item(_,_,_), Enemy(_,_,_))
+      | (Enemy(_,_,_), Item(_,_,_))
+      | (Item(_,_,_), Item(_,_,_)) -> true
+    | (Player(_,_,o1), Enemy(_,_,_)) -> if o1.invuln > 0 then true else false
+    | _ -> false
   in o1.kill || o2.kill || ctypes
 
 (*Used for checking if collisions occur. Compares half-widths and half-heights
@@ -348,47 +326,47 @@ let check_collision c1 c2 =
   let b1 = get_aabb c1 and b2 = get_aabb c2 in
   let o1 = get_obj c1 in
   if col_bypass c1 c2 then None else
-  let vx = (b1.center.x) -. (b2.center.x) in
-  let vy = (b1.center.y) -. (b2.center.y) in
-  let hwidths = (b1.half.x) +. (b2.half.x) in
-  let hheights = (b1.half.y) +. (b2.half.y) in
-  if abs_float vx < hwidths && abs_float vy < hheights then begin
-    let ox = hwidths -. abs_float vx in
-    let oy = hheights -. abs_float vy in
-    if ox >= oy then begin
-      if vy > 0. then (o1.pos.y <- (o1.pos.y+.oy);  Some North)
-      else (o1.pos.y <- (o1.pos.y -. oy);  Some South)
-    end else begin
-      if vx > 0. then (o1.pos.x <- o1.pos.x +.ox; Some West)
-      else (o1.pos.x <- o1.pos.x -. ox;  Some East)
-    end
-  end else None
+    let vx = (b1.center.x) -. (b2.center.x) in
+    let vy = (b1.center.y) -. (b2.center.y) in
+    let hwidths = (b1.half.x) +. (b2.half.x) in
+    let hheights = (b1.half.y) +. (b2.half.y) in
+    if abs_float vx < hwidths && abs_float vy < hheights then begin
+        let ox = hwidths -. abs_float vx in
+        let oy = hheights -. abs_float vy in
+        if ox >= oy then begin
+            if vy > 0. then (o1.pos.y <- (o1.pos.y+.oy);  Some North)
+            else (o1.pos.y <- (o1.pos.y -. oy);  Some South)
+          end else begin
+            if vx > 0. then (o1.pos.x <- o1.pos.x +.ox; Some West)
+            else (o1.pos.x <- o1.pos.x -. ox;  Some East)
+          end
+      end else None
 
 (*"Kills" the matched object by setting certain parameters for each.*)
 let kill collid ctx =
   match collid with
   | Enemy(t,s,o) ->
-      let pos = (o.pos.x,o.pos.y) in
-      let score = if o.score > 0 then [Particle.make_score o.score pos ctx] else [] in
-      let remains = begin match t with
-      | Goomba -> [Particle.make GoombaSquish pos ctx]
-      | _ -> []
-      end in
-      score @ remains
+     let pos = (o.pos.x,o.pos.y) in
+     let score = if o.score > 0 then [Particle.make_score o.score pos ctx] else [] in
+     let remains = begin match t with
+                   | Goomba -> [Particle.make GoombaSquish pos ctx]
+                   | _ -> []
+                   end in
+     score @ remains
   | Block(t,s,o) ->
-      begin match t with
-      | Brick ->
-          let pos = (o.pos.x,o.pos.y) in
-          let p1 = Particle.make ~vel:(-5.,-5.) ~acc:(0.,0.2) BrickChunkL pos ctx in
-          let p2 = Particle.make ~vel:(-3.,-4.) ~acc:(0.,0.2) BrickChunkL pos ctx in
-          let p3 = Particle.make ~vel:(3.,-4.) ~acc:(0.,0.2) BrickChunkR pos ctx in
-          let p4 = Particle.make ~vel:(5.,-5.) ~acc:(0.,0.2) BrickChunkR pos ctx in
-          [p1;p2;p3;p4]
-      | _ -> []
-      end
+     begin match t with
+     | Brick ->
+        let pos = (o.pos.x,o.pos.y) in
+        let p1 = Particle.make ~vel:(-5.,-5.) ~acc:(0.,0.2) BrickChunkL pos ctx in
+        let p2 = Particle.make ~vel:(-3.,-4.) ~acc:(0.,0.2) BrickChunkL pos ctx in
+        let p3 = Particle.make ~vel:(3.,-4.) ~acc:(0.,0.2) BrickChunkR pos ctx in
+        let p4 = Particle.make ~vel:(5.,-5.) ~acc:(0.,0.2) BrickChunkR pos ctx in
+        [p1;p2;p3;p4]
+     | _ -> []
+     end
   | Item(t,s,o) ->
-      begin match t with
-      | Mushroom -> [Particle.make_score o.score (o.pos.x,o.pos.y) ctx]
-      | _ -> []
-      end
+     begin match t with
+     | Mushroom -> [Particle.make_score o.score (o.pos.x,o.pos.y) ctx]
+     | _ -> []
+     end
   | _ -> []

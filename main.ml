@@ -4,8 +4,6 @@ module Pg = Procedural_generator
 
 let loadCount =  ref 0
 let imgsToLoad = 4
-let level_width = 512.
-let level_height = 256.
 
 (*Canvas is chosen from the index.html file. The context is obtained from
  *the canvas. Listeners are added. A level is generated and the general
@@ -23,7 +21,7 @@ let load _ =
       ) in
   let _ = Html.addEventListener Html.document Html.Event.keydown (Html.handler Director.keydown) Js._true in
   let _ = Html.addEventListener Html.document Html.Event.keyup (Html.handler Director.keyup) Js._true in
-  let _ = Director.update_loop canvas in
+  let _ = Director.start canvas in
   ()
 
 let inc_counter _ =

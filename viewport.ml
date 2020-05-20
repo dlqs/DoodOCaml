@@ -3,14 +3,12 @@ open Actors
 type viewport = {
   pos: Actors.xy;
   v_dim: Actors.xy;
-  m_dim: Actors.xy;
 }
 
-let make (vx,vy) (mx,my) = 
+let make (vx,vy) = 
   {
-    pos = {x = 0.; y = 0.;};
+    pos = {x = 0; y = 0;};
     v_dim = {x = vx; y = vy};
-    m_dim = {x = mx; y = my};
   }
 
 (* Calculates the viewport origin coordinate given the centering coordinate
