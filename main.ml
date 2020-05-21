@@ -31,7 +31,7 @@ let inc_counter _ =
 (*Used for concurrency issues.*)
 let preload _ =
   let root_dir = "sprites/" in
-  let imgs = [ "blocks.png";"items.png";"enemies.png";"mario-small.png" ] in
+  let imgs = ["blocks.png";"items.png";"enemies.png";"mario-small.png";"green_tile.png"] in
   List.map (fun img_src ->
     let img_src = root_dir ^ img_src in
     let img = (Html.createImg Html.document) in

@@ -1,9 +1,6 @@
 open Js_of_ocaml
 open Sprite
 open Object
-open Actors
-open Viewport
-open Particle
 
 (* Represents the values of relevant key bindings. *)
 type keys = {
@@ -13,7 +10,6 @@ type keys = {
   mutable down: bool;
   mutable bbox: int;
 }
-
 
 (*st represents the state of the game. It includes a background sprite (e.g.,
  * (e.g., hills), a context (used for rendering onto the page), a viewport
@@ -26,7 +22,7 @@ type state = {
   bgd: sprite option;
   ctx: Dom_html.canvasRenderingContext2D Js.t;
   collids: collidable list;
-  vpt: viewport;
+  vpt: Viewport.viewport;
   score: int;
   game_over: bool;
 }
@@ -40,17 +36,19 @@ let pressed_keys = {
   bbox = 0;
 }
 
-let draw canvas vpt collids =
+(*let draw canvas vpt collids =
   Draw.clear_canvas canvas;
   let context = canvas##getContext (Dom_html._2d_) in
   let cw = float_of_int canvas##.width in
-  let ch = float_of_int canvas##.height in
-
+  let ch = float_of_int canvas##.height in*)
 
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
   let vpt = Viewport.make (canvas##.width, canvas##.height) in
-  let collids = (Procedural_generator.generate (0, 0) (canvas##.width, canvas##.height)) in
+  ignore(Sprite.setup ctx);
+  let collids = Procedural_generator.generate {x = 0; y = 0} { x = canvas##.width; y = canvas##.height}
+                |> Object.make_all 
+  in
   {
     bgd = None;
     ctx;
@@ -61,19 +59,15 @@ let setup canvas =
   }
 
 let start canvas =
-  let init_state = setup canvas in
   let rec game_loop time state = begin
-      draw canvas state.vpt state.collids;
-      let collids = state.collids
-      let next_state = { state with
-                         vpt = Viewport.update state.vpt
-                         
-                       } in
+      (*draw canvas state.vpt state.collids;*)
+      let collids = state.collids in
+      let next_state = state in
       ignore (Dom_html.window##requestAnimationFrame 
                 (Js.wrap_callback (fun (t:float) ->
                      game_loop t state));)
     end in
-  game_loop 0. init_state
+  game_loop 0. (setup canvas)
 
 (* Keydown event handler translates a key press *)
 let keydown evt =

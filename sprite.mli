@@ -1,18 +1,18 @@
 open Js_of_ocaml
 
 (* Represents an xy vector *)
-type xy = int * int (* x, y *)
+type pxy = int * int (* x, y *)
 
 (* Inherent sprite parameters from which to create the sprite *)
 type sprite_params =
   {
-   max_frames: int;
+    max_frames: int;
     max_ticks: int;
     img_src: string;
-    frame_size: xy;
-    src_offset: xy;
-    bbox_offset: xy;
-    bbox_size: xy;
+    frame_size: pxy;
+    src_offset: pxy;
+    bbox_offset: pxy;
+    bbox_size: pxy;
     loop: bool;
   }
 
@@ -20,27 +20,25 @@ type sprite_params =
 type sprite = 
   {
     mutable params: sprite_params;
-    context: Dom_html.canvasRenderingContext2D Js.t; 
     frame: int ref;
     ticks: int ref;
-    mutable img: Dom_html.imageElement Js.t;
+    img: Dom_html.imageElement Js.t;
   }
 
+val setup : Dom_html.canvasRenderingContext2D Js.t -> unit
 
 (* Sets up a sprite to create *)
-val setup_sprite : ?loop:bool -> ?bb_off:float*float-> ?bb_sz:float*float 
-        -> string -> int -> int -> xy -> xy 
+val setup_sprite : ?loop:bool -> ?bb_off:int*int-> ?bb_sz:int*int 
+        -> string -> int -> int -> pxy -> pxy 
                           -> sprite_params 
 
-val get_s_frame_size: Actors.spawn_typ -> xy
+val get_s_frame_size: Actors.actor_typ -> pxy
 
 (* Creates a sprite given the actor type *)
-val make : Actors.spawn_typ -> Actors.dir_1d 
-   -> Dom_html.canvasRenderingContext2D Js.t
-   -> sprite
+val make : Actors.actor_typ -> sprite
 
 (* Make a background *)
-val make_bgd : Dom_html.canvasRenderingContext2D Js.t  -> sprite
+val make_bgd : sprite
 
 (* Updates the sprite's animation *)
 val update_animation : sprite -> unit

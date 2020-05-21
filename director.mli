@@ -1,6 +1,7 @@
 open Js_of_ocaml
+
 (* Initiates the main game loop *)
-val update_loop : Dom_html.canvasElement Js.t
+val start : Dom_html.canvasElement Js.t
                   -> unit
 
 (* Keydown event handler function *)
