@@ -36,18 +36,17 @@ let pressed_keys = {
   bbox = 0;
 }
 
-(*let draw canvas vpt collids =
+(*
+let draw canvas vpt collids =
   Draw.clear_canvas canvas;
-  let context = canvas##getContext (Dom_html._2d_) in
-  let cw = float_of_int canvas##.width in
-  let ch = float_of_int canvas##.height in*)
-
+  ignore(collids |> vpt.filter_in_view |> Draw.render context );
+ *)
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
   let vpt = Viewport.make (canvas##.width, canvas##.height) in
   ignore(Sprite.setup ctx);
-  let collids = Procedural_generator.generate {x = 0; y = 0} { x = canvas##.width; y = canvas##.height}
-                |> Object.make_all 
+  let collids = (Procedural_generator.generate {x = 0; y = 0} { x = canvas##.width; y = canvas##.height}
+                |> Object.make_all )
   in
   {
     bgd = None;

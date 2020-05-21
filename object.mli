@@ -21,4 +21,8 @@ type collidable =
   | Player of pl_typ * pl_state * Sprite.sprite * obj_state
   | Tile of tile_typ * Sprite.sprite * obj_state
 
+val get_obj: collidable -> obj_state
+
+val get_sprite: collidable -> Sprite.sprite
+
 val make_all: obj_prefab list -> collidable list

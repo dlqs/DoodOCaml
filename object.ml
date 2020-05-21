@@ -29,6 +29,13 @@ let new_id () =
   id_counter := !id_counter + 1;
   !id_counter
 
+(*Helper methods for getting sprites and objects from their collidables*)
+let get_sprite = function
+  | Player (_,_,s,_) | Tile(_,s,_) -> s
+
+let get_obj = function
+  | Player (_,_,_,o) | Tile(_,_,o) -> o
+
 let setup =
   {
     id = new_id();
