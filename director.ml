@@ -36,17 +36,17 @@ let pressed_keys = {
   bbox = 0;
 }
 
-(*
-let draw canvas vpt collids =
+let draw canvas context vpt collids =
   Draw.clear_canvas canvas;
-  ignore(collids |> vpt.filter_in_view |> Draw.render context );
- *)
+  collids |> Viewport.filter_into_view vpt |> Draw.render canvas
+  
+
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
   let vpt = Viewport.make (canvas##.width, canvas##.height) in
   ignore(Sprite.setup ctx);
-  let collids = (Procedural_generator.generate {x = 0; y = 0} { x = canvas##.width; y = canvas##.height}
-                |> Object.make_all )
+  let collids = Procedural_generator.generate {x = 0; y = 0} { x = canvas##.width; y = canvas##.height}
+                |> Object.make_all
   in
   {
     bgd = None;
@@ -59,7 +59,7 @@ let setup canvas =
 
 let start canvas =
   let rec game_loop time state = begin
-      (*draw canvas state.vpt state.collids;*)
+      draw canvas state.ctx state.vpt state.collids;
       let collids = state.collids in
       let next_state = state in
       ignore (Dom_html.window##requestAnimationFrame 

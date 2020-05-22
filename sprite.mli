@@ -38,7 +38,7 @@ val get_s_frame_size: Actors.actor_typ -> pxy
 val make : Actors.actor_typ -> sprite
 
 (* Make a background *)
-val make_bgd : sprite
+val make_bgd : Dom_html.canvasRenderingContext2D Js.t -> sprite
 
 (* Updates the sprite's animation *)
 val update_animation : sprite -> unit

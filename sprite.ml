@@ -88,13 +88,13 @@ let make_player plt pls =
 
 
 (* Makes a sprite from provided [params]. *)
-let attach_img params =
+let make_from_params params =
   let img = StringMap.find params.img_src imgMap in
   {
     params;
-    img;
     frame = ref 0;
     ticks = ref 0;
+    img;
   }
 
 (*Make is the wrapper function to cycle through sprite animations*)
@@ -103,12 +103,12 @@ let make actor =
     | APlayer(plt,pls) -> make_player plt pls
     | ATile t -> make_tile t
   in
-  attach_img params 
+  make_from_params params 
 
 (* Make a background *)
-let make_bgd =
+let make_bgd ctx =
   let params = setup_sprite "bgd-1.png" 1 0 (512,256) (0,0) in
-  attach_img params 
+  make_from_params params
 
 (*update_animation is the main method to cycle through sprite animations*)
 let update_animation (spr: sprite) =

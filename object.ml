@@ -63,7 +63,7 @@ let make op =
   | APlayer(plt, pls) -> Player(plt, pls, Sprite.make typ, setup_player pos)
   | ATile(_) -> Tile(Green, Sprite.make typ, setup_tile pos)
 
-let rec make_all (ops: obj_prefab list) : collidable list =
+let rec make_all ops : collidable list =
   match ops with
   | [] -> []
   | h::t -> (make h)::make_all t
