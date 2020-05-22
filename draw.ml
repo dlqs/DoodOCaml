@@ -15,6 +15,7 @@ let render canvas collids =
       let sx = sx + (!(sprite.frame)) * sw in
       (*print_endline (string_of_int !(sprite.frame));*)
       (*context##clearRect(0.,0.,sw, sh);*)
+      print_endline (string_of_int dy);
       ignore(context##drawImage_full (sprite.img)
                (fi sx)
                (fi sy)

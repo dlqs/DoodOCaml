@@ -17,7 +17,7 @@ let generate_initial (w:float) (base:float)
   let player = Object.spawn (SPlayer(SmallM,Standing)) context (w /. 2., base) in
   (player, obj_converted_ground_blocks)*)
 
-let generate (bot_left:Object.xy) (top_right:Object.xy) : Object.obj_prefab list =
+(*let generate (bot_left:Object.xy) (top_right:Object.xy) : Object.obj_prefab list =
   let rec generate_helper x y limitX limitY acc =
     if y >= limitY then acc else
     if x >= limitX then generate_helper 0 (y + 1) limitX limitY acc else
@@ -26,5 +26,7 @@ let generate (bot_left:Object.xy) (top_right:Object.xy) : Object.obj_prefab list
     let w = snd (Sprite.get_s_frame_size (fst tile)) in
     generate_helper (x + w) y limitX limitY (tile::acc)
   in
-  generate_helper bot_left.x bot_left.y top_right.x top_right.y []
+  generate_helper bot_left.x bot_left.y top_right.x top_right.y []*)
 
+let generate (bot_left:Object.xy) (top_right:Object.xy) : Object.obj_prefab list =
+  [(Actors.ATile(Green), { x=0; y=0})]

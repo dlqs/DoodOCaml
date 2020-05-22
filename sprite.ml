@@ -27,7 +27,7 @@ type sprite =
   }
 
 let imgsrcs = ["green_tile.png"]
-let imgdir = "sprites/"
+let imgdir = "./sprites/"
 
 (* Creates the HTML image elements first *)
 let setup ctx =

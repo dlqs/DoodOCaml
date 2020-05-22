@@ -18,8 +18,9 @@ let in_view vpt collid :bool =
 
 let translate_coords vpt collid =
   let obj_pos = (Object.get_obj collid).pos in
-  let new_pos = { x = vpt.pos.x + vpt.v_dim.x - obj_pos.x;
-                  y = vpt.pos.y + vpt.v_dim.y - obj_pos.y } in
+  let obj_dim = (Object.get_sprite collid).params.frame_size in
+  let new_pos = { x = obj_pos.x;
+                  y = vpt.pos.y + vpt.v_dim.y - obj_pos.y - snd obj_dim } in
   match collid with
   | Player(plt, pls, s, o) -> Player(plt, pls, s, { o with pos = new_pos })
   | Tile(tt, s, o) -> Tile(tt, s, { o with pos = new_pos })

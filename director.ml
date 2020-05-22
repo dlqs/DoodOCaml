@@ -61,7 +61,6 @@ let setup canvas =
 
 let start canvas =
   let rec game_loop time state = begin
-      print_endline "helllo";
       print_endline ("time: "^(string_of_float time));
       draw canvas state;
       let collids = state.collids in
@@ -70,7 +69,8 @@ let start canvas =
                 (Js.wrap_callback (fun (t:float) ->
                      game_loop t state));)
     end in
-  game_loop 0. (setup canvas)
+  (*game_loop 0. (setup canvas)*)
+  draw canvas (setup canvas)
 
 (* Keydown event handler translates a key press *)
 let keydown evt =
