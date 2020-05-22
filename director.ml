@@ -22,6 +22,7 @@ type state = {
   bgd: sprite option;
   ctx: Dom_html.canvasRenderingContext2D Js.t;
   collids: collidable list;
+  imgMap: Sprite.imgMap_t;
   vpt: Viewport.viewport;
   score: int;
   game_over: bool;
@@ -36,22 +37,23 @@ let pressed_keys = {
   bbox = 0;
 }
 
-let draw canvas context vpt collids =
+let draw canvas state =
   Draw.clear_canvas canvas;
-  collids |> Viewport.filter_into_view vpt |> Draw.render canvas
-  
+  state.collids |> Viewport.filter_into_view state.vpt
+                |> Draw.render canvas
 
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
   let vpt = Viewport.make (canvas##.width, canvas##.height) in
-  ignore(Sprite.setup ctx);
+  let imgMap = Sprite.setup ctx in
   let collids = Procedural_generator.generate {x = 0; y = 0} { x = canvas##.width; y = canvas##.height}
-                |> Object.make_all
+                |> Object.make_all imgMap
   in
   {
     bgd = None;
     ctx;
     collids = collids;
+    imgMap;
     vpt = vpt;
     score = 0;
     game_over = false;
@@ -59,7 +61,9 @@ let setup canvas =
 
 let start canvas =
   let rec game_loop time state = begin
-      draw canvas state.ctx state.vpt state.collids;
+      print_endline "helllo";
+      print_endline ("time: "^(string_of_float time));
+      draw canvas state;
       let collids = state.collids in
       let next_state = state in
       ignore (Dom_html.window##requestAnimationFrame 

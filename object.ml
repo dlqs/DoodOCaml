@@ -56,15 +56,15 @@ let setup_tile pos =
     pos = pos
   }
 
-let make op =
+let make imgMap op =
   let typ = fst op in
   let pos = snd op in
   match typ with
-  | APlayer(plt, pls) -> Player(plt, pls, Sprite.make typ, setup_player pos)
-  | ATile(_) -> Tile(Green, Sprite.make typ, setup_tile pos)
+  | APlayer(plt, pls) -> Player(plt, pls, Sprite.make typ imgMap, setup_player pos)
+  | ATile(_) -> Tile(Green, Sprite.make typ imgMap, setup_tile pos)
 
-let rec make_all ops : collidable list =
+let rec make_all imgMap ops: collidable list =
   match ops with
   | [] -> []
-  | h::t -> (make h)::make_all t
+  | h::t -> (make imgMap h)::make_all imgMap t
 

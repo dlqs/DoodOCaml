@@ -4,6 +4,8 @@ module StringMap = Map.Make(String)
 
 type pxy = int * int (* x, y *)
 
+type imgMap_t = Dom_html.imageElement Js.t Map.Make(String).t
+
 type sprite_params =
   {
     max_frames: int;
@@ -26,16 +28,19 @@ type sprite =
 
 let imgsrcs = ["green_tile.png"]
 let imgdir = "sprites/"
-let imgMap = StringMap.empty
 
 (* Creates the HTML image elements first *)
 let setup ctx =
-  List.iter (fun imgsrc ->
-      let imgsrc = imgdir ^ imgsrc in
+  let rec setup_helper imgsrcs imgMap =
+    match imgsrcs with
+    | [] -> imgMap
+    | h::t ->
+      let imgsrc = imgdir ^ h in
       let img = (Dom_html.createImg Dom_html.document) in
       img##.src := (Js.string imgsrc);
-      ignore(StringMap.add imgsrc img imgMap)
-    ) imgsrcs
+      setup_helper t (StringMap.add imgsrc img imgMap)
+  in
+  setup_helper imgsrcs StringMap.empty
 
 (*setup_sprite is used to initialize a sprite.*)
 let setup_sprite ?loop:(loop=true) ?bb_off:(bbox_offset=(0,0)) ?bb_sz:(bbox_size=(0,0))
@@ -88,7 +93,7 @@ let make_player plt pls =
 
 
 (* Makes a sprite from provided [params]. *)
-let make_from_params params =
+let make_from_params params imgMap =
   let img = StringMap.find params.img_src imgMap in
   {
     params;
@@ -98,17 +103,17 @@ let make_from_params params =
   }
 
 (*Make is the wrapper function to cycle through sprite animations*)
-let make actor =
+let make actor imgMap =
   let params = match actor with
     | APlayer(plt,pls) -> make_player plt pls
     | ATile t -> make_tile t
   in
-  make_from_params params 
+  make_from_params params imgMap
 
 (* Make a background *)
-let make_bgd ctx =
+let make_bgd ctx imgMap =
   let params = setup_sprite "bgd-1.png" 1 0 (512,256) (0,0) in
-  make_from_params params
+  make_from_params params imgMap
 
 (*update_animation is the main method to cycle through sprite animations*)
 let update_animation (spr: sprite) =

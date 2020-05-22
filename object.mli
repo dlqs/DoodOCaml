@@ -25,4 +25,4 @@ val get_obj: collidable -> obj_state
 
 val get_sprite: collidable -> Sprite.sprite
 
-val make_all: obj_prefab list -> collidable list
+val make_all: Sprite.imgMap_t -> obj_prefab list -> collidable list
