@@ -8,19 +8,12 @@ type controls =
   | CDown
 
 type pl_typ =
-  | BigM
-  | SmallM
+  | Standing
 
 type tile_typ =
   | Green
 
-type pl_state =
-  | Standing
-  | Jumping
-  | Running
-  | Crouching
-
 (* actors are abstract objects *)
 type actor_typ =
-  | APlayer of pl_typ * pl_state
+  | APlayer of pl_typ
   | ATile of tile_typ

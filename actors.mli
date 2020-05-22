@@ -10,20 +10,12 @@ type controls =
 
 (* Player ability type *)
 type pl_typ =
-  | BigM
-  | SmallM
+  | Standing
 
 type tile_typ =
   | Green
 
-(* Player action type *)
-type pl_state =
-  | Standing
-  | Jumping
-  | Running
-  | Crouching
-
 type actor_typ =
-  | APlayer of pl_typ * pl_state
+  | APlayer of pl_typ
   | ATile of tile_typ
 

@@ -18,11 +18,13 @@ type obj_state = {
 
 (* Holds an instantiated object (also because object is a reserved word) *)
 type collidable =
-  | Player of pl_typ * pl_state * Sprite.sprite * obj_state
+  | Player of pl_typ * Sprite.sprite * obj_state
   | Tile of tile_typ * Sprite.sprite * obj_state
 
 val get_obj: collidable -> obj_state
 
 val get_sprite: collidable -> Sprite.sprite
+
+val make: Sprite.imgMap_t -> obj_prefab -> collidable 
 
 val make_all: Sprite.imgMap_t -> obj_prefab list -> collidable list

@@ -15,7 +15,7 @@ type obj_state = {
   }
 
 type collidable =
-  | Player of pl_typ * pl_state * Sprite.sprite * obj_state
+  | Player of pl_typ * Sprite.sprite * obj_state
   | Tile of tile_typ * Sprite.sprite * obj_state
 
 (*Variables*)
@@ -31,10 +31,10 @@ let new_id () =
 
 (*Helper methods for getting sprites and objects from their collidables*)
 let get_sprite = function
-  | Player (_,_,s,_) | Tile(_,s,_) -> s
+  | Player (_,s,_) | Tile(_,s,_) -> s
 
 let get_obj = function
-  | Player (_,_,_,o) | Tile(_,_,o) -> o
+  | Player (_,_,o) | Tile(_,_,o) -> o
 
 let setup =
   {
@@ -60,7 +60,7 @@ let make imgMap op =
   let typ = fst op in
   let pos = snd op in
   match typ with
-  | APlayer(plt, pls) -> Player(plt, pls, Sprite.make typ imgMap, setup_player pos)
+  | APlayer(plt) -> Player(plt, Sprite.make typ imgMap, setup_player pos)
   | ATile(_) -> Tile(Green, Sprite.make typ imgMap, setup_tile pos)
 
 let rec make_all imgMap ops: collidable list =

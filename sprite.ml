@@ -26,8 +26,8 @@ type sprite =
     img: Dom_html.imageElement Js.t;
   }
 
-let imgsrcs = ["green_tile.png"]
 let imgdir = "./sprites/"
+let imgsrcs = ["blocks.png";"items.png";"enemies.png";"mario-small.png";"green_tile.png";"doodle.png"]
 
 (* Creates the HTML image elements first *)
 let setup ctx =
@@ -61,24 +61,13 @@ let setup_sprite ?loop:(loop=true) ?bb_off:(bbox_offset=(0,0)) ?bb_sz:(bbox_size
 (*Get sprite frame size of a actor type.*)
 let get_s_frame_size (typ: actor_typ) =
   match typ with
-  | APlayer(t, _) -> begin match t with
-                      | SmallM -> (16, 16)
-                      | BigM -> (16, 27)
+  | APlayer(plt) -> begin match plt with
+                      | Standing -> (30, 45)
                       end
-  | ATile(t) -> (40, 12)
+  | ATile(tt) -> (40, 12)
 
 (*The following functions are used in order to define sprite animations
  *from their sprite sheets. Also creates bounding boxes if necessary.*)
-
-(*Sets sprite for small mario.*)
-let make_small_player pls =
-  let fs = get_s_frame_size (APlayer(SmallM, Standing)) in
-  match pls with
-  (* 16x16 grid with 0x0 offset*)
-  | Standing -> setup_sprite "mario-small.png" ~bb_off:(3,1) ~bb_sz:(11,15) 1 0 fs (0,0)
-  | Jumping -> setup_sprite "mario-small.png" ~bb_off:(2,1) ~bb_sz:(13,15) 2 10 fs (16,16)
-  | Running -> setup_sprite "mario-small.png" ~bb_off:(2,1) ~bb_sz:(12,15) 3 5 fs (16,0)
-  | Crouching -> setup_sprite "mario-small.png" ~bb_off:(1,5) ~bb_sz:(14,10) 1 0 fs (0,64)
 
 let make_tile (typ) =
   let fs = get_s_frame_size (ATile(typ)) in
@@ -86,11 +75,10 @@ let make_tile (typ) =
   | Green -> setup_sprite "green_tile.png" 1 0 fs (0,0)
 
 (*Calls to set sprite for either big or small mario.*)
-let make_player plt pls = 
+let make_player plt = 
+  let fs = get_s_frame_size (APlayer(Standing)) in
   match plt with
-  | SmallM -> make_small_player pls
-  | _ -> failwith "invalid"
-
+  | Standing -> setup_sprite "doodle.png" ~bb_off:(3,1) ~bb_sz:(11,15) 1 0 fs (0,0)
 
 (* Makes a sprite from provided [params]. *)
 let make_from_params params imgMap =
@@ -105,8 +93,8 @@ let make_from_params params imgMap =
 (*Make is the wrapper function to cycle through sprite animations*)
 let make actor imgMap =
   let params = match actor with
-    | APlayer(plt,pls) -> make_player plt pls
-    | ATile t -> make_tile t
+    | APlayer(plt) -> make_player plt
+    | ATile(tt) -> make_tile tt
   in
   make_from_params params imgMap
 

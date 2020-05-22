@@ -37,40 +37,43 @@ let pressed_keys = {
   bbox = 0;
 }
 
-let draw canvas state =
-  Draw.clear_canvas canvas;
-  state.collids |> Viewport.filter_into_view state.vpt
-                |> Draw.render canvas
-
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
-  let vpt = Viewport.make (canvas##.width, canvas##.height) in
+  let cw = canvas##.width in
+  let ch = canvas##.height in
   let imgMap = Sprite.setup ctx in
-  let collids = Procedural_generator.generate {x = 0; y = 0} { x = canvas##.width; y = canvas##.height}
+  let player = Object.make imgMap (Actors.APlayer(Standing), { x = cw/2; y = 0 }) in
+  let vpt = Viewport.make (cw, ch) in
+  let collids = Procedural_generator.generate {x = 0; y = 0} { x = cw; y = ch }
                 |> Object.make_all imgMap
   in
-  {
-    bgd = None;
-    ctx;
-    collids = collids;
-    imgMap;
-    vpt = vpt;
-    score = 0;
-    game_over = false;
-  }
+  ({
+      bgd = None;
+      ctx;
+      collids;
+      imgMap;
+      vpt = vpt;
+      score = 0;
+      game_over = false;
+    },
+   player)
 
 let start canvas =
-  let rec game_loop time state = begin
-      print_endline ("time: "^(string_of_float time));
-      draw canvas state;
+  let rec game_loop time state player = begin
+      print_endline "tick";
+
+      Draw.clear_canvas canvas;
+      player::state.collids |> Viewport.filter_into_view state.vpt
+                            |> Draw.render canvas;
+
       let collids = state.collids in
       let next_state = state in
       ignore (Dom_html.window##requestAnimationFrame 
                 (Js.wrap_callback (fun (t:float) ->
-                     game_loop t state));)
+                     game_loop t state player));)
     end in
-  (*game_loop 0. (setup canvas)*)
-  draw canvas (setup canvas)
+  let (initial_state, initial_player) = setup canvas in
+  game_loop 0. initial_state initial_player
 
 (* Keydown event handler translates a key press *)
 let keydown evt =

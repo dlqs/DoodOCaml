@@ -13,8 +13,6 @@ let render canvas collids =
       let (dx, dy) = (pos.x,pos.y) in
       let (dw, dh) = sprite.params.frame_size in
       let sx = sx + (!(sprite.frame)) * sw in
-      (*print_endline (string_of_int !(sprite.frame));*)
-      (*context##clearRect(0.,0.,sw, sh);*)
       ignore(context##drawImage_full (sprite.img)
                (fi sx)
                (fi sy)

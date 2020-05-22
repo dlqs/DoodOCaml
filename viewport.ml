@@ -22,7 +22,7 @@ let translate_coords vpt collid =
   let new_pos = { x = obj_pos.x;
                   y = vpt.pos.y + vpt.v_dim.y - obj_pos.y - snd obj_dim } in
   match collid with
-  | Player(plt, pls, s, o) -> Player(plt, pls, s, { o with pos = new_pos })
+  | Player(plt, s, o) -> Player(plt, s, { o with pos = new_pos })
   | Tile(tt, s, o) -> Tile(tt, s, { o with pos = new_pos })
 
 let filter_into_view vpt collids =
