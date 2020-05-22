@@ -1,4 +1,7 @@
 open Actors
+open Object
+
+let layer_width = 24
 
 (*Chooses what type of enemy should be instantiated given typ number*)
 let choose_tile_typ (typ:int) : tile_typ =
@@ -17,16 +20,18 @@ let generate_initial (w:float) (base:float)
   let player = Object.spawn (SPlayer(SmallM,Standing)) context (w /. 2., base) in
   (player, obj_converted_ground_blocks)*)
 
-(*let generate (bot_left:Object.xy) (top_right:Object.xy) : Object.obj_prefab list =
+let generate (bot_left: xy) (top_right: xy) : obj_prefab list =
   let rec generate_helper x y limitX limitY acc =
     if y >= limitY then acc else
-    if x >= limitX then generate_helper 0 (y + 1) limitX limitY acc else
-    let open Object in
-    let tile = (Actors.ATile(Green), { x; y }) in
-    let w = snd (Sprite.get_s_frame_size (fst tile)) in
-    generate_helper (x + w) y limitX limitY (tile::acc)
+      if x >= limitX then generate_helper 0 (y + layer_width) limitX limitY acc else
+        let p = Random.int 5 in
+        let tile_prob = 1 in
+        let actor_type = Actors.ATile(Green) in
+        let prefab = (actor_type, { x; y}) in
+        let w = fst (Sprite.get_s_frame_size actor_type) in
+        if p < tile_prob then
+          generate_helper (x + w) y limitX limitY (prefab::acc)
+        else
+          generate_helper (x + w) y limitX limitY acc
   in
-  generate_helper bot_left.x bot_left.y top_right.x top_right.y []*)
-
-let generate (bot_left:Object.xy) (top_right:Object.xy) : Object.obj_prefab list =
-  [(Actors.ATile(Green), { x=0; y=0})]
+  generate_helper bot_left.x bot_left.y top_right.x top_right.y []
