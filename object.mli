@@ -1,5 +1,6 @@
 open Actors
 
+
 (* Generic container for pair of integers *)
 type xy = {
   x: int;
@@ -29,6 +30,8 @@ type collidable =
 val get_obj: collidable -> obj_state
 
 val get_sprite: collidable -> Sprite.sprite
+
+val update_player: collidable -> Actors.controls list -> collidable
 
 val move: obj_state -> obj_state
 

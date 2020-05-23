@@ -2,10 +2,6 @@ open Js_of_ocaml
 open Sprite
 open Object
 
-type controls =
-  | CLeft
-  | CRight
-
 (* Represents the values of relevant key bindings. *)
 type keys = {
   mutable left: bool;
@@ -47,7 +43,7 @@ let pressed_keys = {
  * to be processed each frame. *)
 let translate_keys () =
   let k = pressed_keys in
-  let ctrls = [(k.left,CLeft);(k.right,CRight);] in
+  let ctrls = [(k.left,Actors.CLeft);(k.right,Actors.CRight);] in
   List.fold_left (fun a x -> if fst x then (snd x)::a else a) [] ctrls
 
 let filter_collisions collids =
@@ -56,7 +52,6 @@ let filter_collisions collids =
 let move_collid collid =
   match collid with
   | Player(plt, s, o) ->
-     print_endline ("player pos:"^(string_of_int o.pos.x)^" "^(string_of_int o.pos.y));
      Player(plt, s, Object.move o)
   | Tile(tt, s, o) -> Tile(tt, s, Object.move o)
 
@@ -66,8 +61,10 @@ let update_collid state collid collids =
 
 let run_update_collid state collid =
   match collid with
-  | Player(plt, s, o) ->
-     update_collid state collid state.collids
+  | Player(plt, s, o) as player ->
+     let keys = translate_keys () in
+     let player = Object.update_player player keys in
+     update_collid state player state.collids
   | _ -> update_collid state collid state.collids
 
 let setup canvas =

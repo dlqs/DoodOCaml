@@ -26,6 +26,8 @@ type collidable =
 (*Variables*)
 let gravity = -0.1
 let player_jump = 5.7
+let pl_lat_vel = 1.
+let pl_max_lat_vel = 2.
 
 let id_counter = ref min_int
 
@@ -33,6 +35,30 @@ let id_counter = ref min_int
 let new_id () =
   id_counter := !id_counter + 1;
   !id_counter
+
+(*Helper methods for getting sprites and objects from their collidables*)
+let get_sprite = function
+  | Player (_,s,_) | Tile(_,s,_) -> s
+
+let get_obj = function
+  | Player (_,_,o) | Tile(_,_,o) -> o
+
+let update_player_keys obj_st controls =
+  match controls with
+  | [] -> obj_st
+  | ctrl::t -> let fx = match ctrl with
+               | Actors.CLeft ->   min (obj_st.vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0)
+               | Actors.CRight ->  max (obj_st.vel.fx +. pl_lat_vel) pl_max_lat_vel
+               in
+               { obj_st with vel = { obj_st.vel with fx; }}
+                  
+
+let update_player player controls =
+  match player with
+  | Player(plt, s, o) -> 
+     let o = update_player_keys o controls in
+     Player(plt, s, o)
+  | _ -> failwith "Method called with non-player collidable"
 
 let update_pos obj_st =
   {
@@ -61,12 +87,6 @@ let move_all collids =
       | Tile(tt, s, o) -> Tile(tt, s, move o)
     ) collids
 
-(*Helper methods for getting sprites and objects from their collidables*)
-let get_sprite = function
-  | Player (_,s,_) | Tile(_,s,_) -> s
-
-let get_obj = function
-  | Player (_,_,o) | Tile(_,_,o) -> o
 
 let setup =
   {
