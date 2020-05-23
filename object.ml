@@ -15,6 +15,7 @@ type obj_prefab = actor_typ * xy
 type obj_state = {
     id: int;
     has_gravity: bool;
+    has_friction: bool;
     pos: xy;
     vel: fxy;
   }
@@ -25,9 +26,10 @@ type collidable =
 
 (*Variables*)
 let gravity = -0.1
+let friction_coef = 0.92
 let player_jump = 5.7
-let pl_lat_vel = 1.
-let pl_max_lat_vel = 2.
+let pl_lat_vel = 2.
+let pl_max_lat_vel = 4.
 
 let id_counter = ref min_int
 
@@ -47,8 +49,8 @@ let update_player_keys obj_st controls =
   match controls with
   | [] -> obj_st
   | ctrl::t -> let fx = match ctrl with
-               | Actors.CLeft ->   min (obj_st.vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0)
-               | Actors.CRight ->  max (obj_st.vel.fx +. pl_lat_vel) pl_max_lat_vel
+               | Actors.CLeft ->   max (obj_st.vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0)
+               | Actors.CRight ->  min (obj_st.vel.fx +. pl_lat_vel) pl_max_lat_vel
                in
                { obj_st with vel = { obj_st.vel with fx; }}
                   
@@ -68,13 +70,12 @@ let update_pos obj_st =
     }
   }
 let update_vel obj_st =
-  if obj_st.has_gravity then
+  let fy = obj_st.vel.fy +. if obj_st.has_gravity then gravity else 0. in
+  let fx = obj_st.vel.fx *. friction_coef
+  in
   {
-    obj_st with vel = {
-      fx = obj_st.vel.fx;
-      fy = obj_st.vel.fy +. gravity
-    }
-  } else obj_st
+    obj_st with vel = { fx; fy }
+  }
 
 let move obj_st =
   obj_st |> update_pos |> update_vel
@@ -92,6 +93,7 @@ let setup =
   {
     id = new_id();
     has_gravity = false;
+    has_friction = false;
     pos = {x = 0; y = 0};
     vel = {fx = 0.; fy = 0.};
   }
@@ -125,7 +127,8 @@ let initial_make_player imgMap cw ch =
   let obj_st = {
     obj_st with pos = { x = cw/2; y = cw/8 };
                 vel = { fx = 0.; fy = 5. };
-                has_gravity = true
+                has_gravity = true;
+                has_friction = true;
   } in
   let s = Sprite.make (APlayer(Standing)) imgMap in
   Player(Standing, s, obj_st)
