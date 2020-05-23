@@ -1,5 +1,9 @@
 open Js_of_ocaml
 
+type controls =
+  | CLeft
+  | CRight
+
 (* Initiates the main game loop *)
 val start : Dom_html.canvasElement Js.t
                   -> unit

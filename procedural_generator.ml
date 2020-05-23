@@ -11,14 +11,7 @@ let choose_tile_typ (typ:int) : tile_typ =
 
 (*Main function called to procedurally generate the level map. w and h args
 * are in pixel form. Converts to block form to call generate_helper. Spawns
-* the list of collidables received from generate_helper to display on canvas.
-let generate_initial (w:float) (base:float)
-                    (context:Dom_html.canvasRenderingContext2D Js.t) :
-                    (collidable * collidable list) =
-  Random.self_init();
-  let obj_converted_ground_blocks = [] in
-  let player = Object.spawn (SPlayer(SmallM,Standing)) context (w /. 2., base) in
-  (player, obj_converted_ground_blocks)*)
+* the list of collidables received from generate_helper to display on canvas.*)
 
 let generate (bot_left: xy) (top_right: xy) : obj_prefab list =
   let rec generate_layer botY topY acc =
