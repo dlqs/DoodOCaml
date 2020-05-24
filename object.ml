@@ -8,7 +8,12 @@ type xy = {
 type fxy = {
     fx: float;
     fy: float;
-}
+  }
+
+type aabb = {
+    pos: xy;
+    dim: xy;
+  }
 
 type obj_prefab = actor_typ * xy
 
@@ -55,7 +60,7 @@ let update_player_keys obj_st controls =
                { obj_st with vel = { obj_st.vel with fx; }}
                   
 
-let update_player player controls =
+let update_player controls player =
   match player with
   | Player(plt, s, o) -> 
      let o = update_player_keys o controls in
@@ -133,3 +138,73 @@ let initial_make_player imgMap cw ch =
   let s = Sprite.make (APlayer(Standing)) imgMap in
   Player(Standing, s, obj_st)
 
+let get_aabb collid =
+  let spr = ((get_sprite collid).params) in
+  let obj_st = get_obj collid in
+  let (offx, offy) = spr.bbox_offset in
+  let (bx,by) = (obj_st.pos.x+offx,obj_st.pos.y+offy) in
+  let (sx,sy) = spr.bbox_size in
+  {
+    pos = { x = bx; y = by };
+    dim = { x = sx; y = sy };
+  }
+
+(* move bounding box b by vector v *)
+let move_aabb (b: aabb) (v: fxy) : aabb =
+  {
+    b with pos = {
+      x = b.pos.x + (int_of_float v.fx); 
+      y = b.pos.y + (int_of_float v.fy); 
+    }
+  }
+
+let vec_minus v1 v2 =
+  {
+    fx = v1.fx -. v2.fx;
+    fy = v1.fy -. v2.fy;
+  }
+
+let will_collide c1 c2 =
+  let b1 = get_aabb c1 in
+  let b2 = get_aabb c2 in
+  let v1 = (get_obj c1).vel in
+  let v2 = (get_obj c2).vel in
+  let b1 = vec_minus v1 v2 |> move_aabb b1 in
+  let b1ay = b1.pos.y and b1by = b1.pos.y + b1.dim.y in
+  let b2ay = b2.pos.y and b2by = b2.pos.y + b2.dim.y in
+  if ((b2ay <= b1ay && b1ay <= b2by) || (b2ay <= b1by && b1by <= b2by)) then
+    let b1ax = b1.pos.x and b1bx = b1.pos.x + b1.dim.x in
+    let b2ax = b2.pos.x and b2bx = b2.pos.x + b2.dim.x in
+    if ((b2ax <= b1ax && b1ax <= b2bx) || (b2ax <= b1bx && b1bx <= b2bx)) then
+      true
+    else
+      false
+  else
+    false
+    
+(* One-body collision *)
+let check_collision c1 c2 =
+  match c1 with
+  | Player(plt, ps, po) as p ->
+     begin match c2 with
+     | Tile(tt, ts, t_o) as t -> 
+        if will_collide p t  then
+          let fy = po.vel.fy*.(-1.) in
+          let po = { po with vel = { po.vel with fy }} in
+          Player(plt, ps, po)
+        else p
+     | _ -> c1
+     end
+  | _ -> c1
+  
+
+let move_collid collid =
+  match collid with
+  | Player(plt, s, o) ->
+     Player(plt, s, move o)
+  | Tile(tt, s, o) -> Tile(tt, s, move o)
+
+let rec update_collid collids collid =
+  match collids with
+  | [] -> collid
+  | h::t -> update_collid t (check_collision collid h)

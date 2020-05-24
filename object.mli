@@ -12,6 +12,11 @@ type fxy = {
     fy: float;
 }
 
+type aabb = {
+    pos: xy;
+    dim: xy;
+  }
+
 (* Holds type and position of object yet-to-be instantiated: used by procedural generator *)
 type obj_prefab = actor_typ * xy
 
@@ -32,9 +37,7 @@ val get_obj: collidable -> obj_state
 
 val get_sprite: collidable -> Sprite.sprite
 
-val update_player: collidable -> Actors.controls list -> collidable
-
-val move: obj_state -> obj_state
+val update_player: Actors.controls list -> collidable -> collidable
 
 val move_all: collidable list -> collidable list
 
@@ -43,3 +46,7 @@ val make: Sprite.imgMap_t -> obj_prefab -> collidable
 val make_all: Sprite.imgMap_t -> obj_prefab list -> collidable list
 
 val initial_make_player: Sprite.imgMap_t -> int -> int -> collidable
+
+val update_collid: collidable list -> collidable -> collidable
+
+val move_collid: collidable -> collidable

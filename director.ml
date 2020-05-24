@@ -46,26 +46,14 @@ let translate_keys () =
   let ctrls = [(k.left,Actors.CLeft);(k.right,Actors.CRight);] in
   List.fold_left (fun a x -> if fst x then (snd x)::a else a) [] ctrls
 
-let filter_collisions collids =
-  []
-
-let move_collid collid =
-  match collid with
-  | Player(plt, s, o) ->
-     Player(plt, s, Object.move o)
-  | Tile(tt, s, o) -> Tile(tt, s, Object.move o)
-
-let update_collid state collid collids =
-  let obj = Object.get_obj collid in
-  move_collid collid
-
 let run_update_collid state collid =
   match collid with
   | Player(plt, s, o) as player ->
      let keys = translate_keys () in
-     let player = Object.update_player player keys in
-     update_collid state player state.collids
-  | _ -> update_collid state collid state.collids
+     player |> Object.update_player keys
+            |> Object.update_collid state.collids
+            |> Object.move_collid
+  | _ -> Object.update_collid state.collids collid
 
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
@@ -97,7 +85,7 @@ let start canvas =
       Draw.clear_canvas canvas;
       player::state.collids |> Viewport.filter_into_view state.vpt
                             |> Draw.render canvas;
-
+      
       let player = run_update_collid state player in
       let collids = List.map (run_update_collid state) state.collids in
 
