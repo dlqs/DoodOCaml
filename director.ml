@@ -39,6 +39,8 @@ let pressed_keys = {
   bbox = 0;
 }
 
+let check_bbox_enabled () = pressed_keys.bbox = 1
+
 (* Converts a keypress to a list of control keys, allowing more than one key
  * to be processed each frame. *)
 let translate_keys () =
@@ -80,11 +82,11 @@ let setup canvas =
 
 let start canvas =
   let rec game_loop time state player = begin
-      print_endline "tick";
 
+      let dbb = check_bbox_enabled() in
       Draw.clear_canvas canvas;
       player::state.collids |> Viewport.filter_into_view state.vpt
-                            |> Draw.render canvas;
+                            |> Draw.render ~draw_bb:dbb canvas;
       
       let player = run_update_collid state player in
       let collids = List.map (run_update_collid state) state.collids in
@@ -102,6 +104,7 @@ let keydown evt =
   let () = match evt##.keyCode with
   | 39 | 68 -> pressed_keys.right <- true
   | 37 | 65 -> pressed_keys.left <- true
+  | 66 -> pressed_keys.bbox <- (pressed_keys.bbox + 1) mod 2
   | _ -> ()
   in Js._true
 

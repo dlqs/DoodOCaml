@@ -3,7 +3,7 @@ open Sprite
 let jstr = Js.string
 let fi = float_of_int
 
-let render canvas collids =
+let render ~draw_bb:(dbb:bool) canvas collids =
   List.iter(fun collid ->
       let sprite = Object.get_sprite collid in
       let context = canvas##getContext (Dom_html._2d_) in
@@ -22,7 +22,17 @@ let render canvas collids =
                (fi dy)
                (fi dw)
                (fi dh)
-        )
+        );
+      if dbb then
+      let (bbox,bboy) = sprite.params.bbox_offset in
+      let (bbsx,bbsy) = sprite.params.bbox_size in
+      context##.strokeStyle := (Js.string "#FF0000");
+      ignore(context##strokeRect
+          (fi (dx+bbox))
+          (fi (dy+bboy))
+          (fi bbsx)
+          (fi bbsy)
+        );
     ) collids
 
 (*Used for animation updating. Canvas is cleared each frame and redrawn.*)
