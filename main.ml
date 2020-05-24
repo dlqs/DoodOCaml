@@ -9,7 +9,7 @@ let imgsToLoad = 4
  *the canvas. Listeners are added. A level is generated and the general
  *update_loop method is called to make the level playable.*)
 let load _ =
-  Random.init(1);
+  Random.init(3);
   let canvas_id = "canvas" in
   let canvas =
     Js.Opt.get

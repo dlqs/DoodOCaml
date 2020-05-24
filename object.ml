@@ -32,7 +32,7 @@ type collidable =
 (*Variables*)
 let gravity = -0.1
 let friction_coef = 0.92
-let player_jump = 5.7
+let pl_jmp_vel = 5.
 let pl_lat_vel = 2.
 let pl_max_lat_vel = 4.
 
@@ -164,12 +164,8 @@ let vec_minus v1 v2 =
     fy = v1.fy -. v2.fy;
   }
 
-let will_collide c1 c2 =
-  let b1 = get_aabb c1 in
-  let b2 = get_aabb c2 in
-  let v1 = (get_obj c1).vel in
-  let v2 = (get_obj c2).vel in
-  let b1 = vec_minus v1 v2 |> move_aabb b1 in
+(* Returns true if the bounding boxes are touching *)
+let bb_collide (b1:aabb) (b2:aabb) : bool =
   let b1ay = b1.pos.y and b1by = b1.pos.y + b1.dim.y in
   let b2ay = b2.pos.y and b2by = b2.pos.y + b2.dim.y in
   if ((b2ay <= b1ay && b1ay <= b2by) || (b2ay <= b1by && b1by <= b2by)) then
@@ -181,6 +177,21 @@ let will_collide c1 c2 =
       false
   else
     false
+
+(* Returns true if the collidables are currently colliding *)
+let currently_colliding c1 c2 =
+  let b1 = get_aabb c1 in
+  let b2 = get_aabb c2 in
+  bb_collide b1 b2
+
+(* Returns true if the collidables will collide based on their velocity vectors *)
+let will_collide c1 c2 =
+  let b1 = get_aabb c1 in
+  let b2 = get_aabb c2 in
+  let v1 = (get_obj c1).vel in
+  let v2 = (get_obj c2).vel in
+  let b1 = vec_minus v1 v2 |> move_aabb b1 in
+  bb_collide b1 b2
     
 (* One-body collision *)
 let check_collision c1 c2 =
@@ -188,8 +199,11 @@ let check_collision c1 c2 =
   | Player(plt, ps, po) as p ->
      begin match c2 with
      | Tile(tt, ts, t_o) as t -> 
-        if will_collide p t  then
-          let fy = po.vel.fy*.(-1.) in
+        if ((will_collide p t) &&
+            (not (currently_colliding p t)) &&
+            (po.vel.fy < 0.)
+           )then
+          let fy = pl_jmp_vel in
           let po = { po with vel = { po.vel with fy }} in
           Player(plt, ps, po)
         else p
