@@ -39,8 +39,8 @@ let render ~draw_bb:(dbb:bool) canvas collids =
       let (bbsx,bbsy) = sprite.params.bbox_size in
       context##.strokeStyle := (Js.string "#FF0000");
       ignore(context##strokeRect
-          (fi (dx+bbox))
-          (fi (dy+bboy))
+          (fi (dx))
+          (fi (dy-bbsy+sh))
           (fi bbsx)
           (fi bbsy)
         );

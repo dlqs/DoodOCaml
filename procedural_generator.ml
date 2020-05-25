@@ -30,3 +30,6 @@ let generate (bot_left: xy) (top_right: xy) : obj_prefab list =
       generate_layer (botY + layer_width) topY generated@acc
   in
   generate_layer bot_left.y top_right.y []
+
+let generate_one =
+  [(Actors.ATile(Green), { x = 100; y = 100})]

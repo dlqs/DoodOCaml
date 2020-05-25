@@ -62,7 +62,7 @@ let setup canvas =
   let imgMap = Sprite.setup ctx in
   let player = Object.initial_make_player imgMap cw ch in
   let vpt = Viewport.make (cw, ch) in
-  let collids = Procedural_generator.generate {x = 0; y = 0} { x = cw; y = ch }
+  let collids = Procedural_generator.generate_one
                 |> Object.make_all imgMap
   in
   ({

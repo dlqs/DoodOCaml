@@ -19,14 +19,15 @@ let in_view vpt collid :bool =
 let translate_debug_pt vpt debug_pt =
   match debug_pt with
   | None -> None
-  | Some pt -> Some { pt with y = vpt.pos.y + vpt.v_dim.y - pt.y }
+  | Some pt ->
+    Some { pt with y = vpt.pos.y + vpt.v_dim.y - pt.y }
 
 let translate_coords vpt collid =
   let obj_st = Object.get_obj collid in
   let obj_pos = obj_st.pos in
-  let obj_dim = (Object.get_sprite collid).params.frame_size in
+  let dy = snd (Object.get_sprite collid).params.frame_size in
   let new_pos = { obj_st.pos with
-                  y = vpt.pos.y + vpt.v_dim.y - obj_st.pos.y - snd obj_dim } in
+                  y = vpt.pos.y + vpt.v_dim.y - obj_st.pos.y - dy } in
   let new_debug_pt = translate_debug_pt vpt obj_st.debug_pt in
   match collid with
   | Player(plt, s, o) -> Player(plt, s, { o with pos = new_pos;
