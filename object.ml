@@ -32,11 +32,13 @@ type collidable =
 (*Variables*)
 let gravity = -0.1
 let friction_coef = 0.92
-let pl_jmp_vel = 5.
+let pl_jmp_vel = 4.
 let pl_lat_vel = 2.
 let pl_max_lat_vel = 4.
 
 let id_counter = ref min_int
+
+let fi = float_of_int
 
 (*Used in object creation and to compare two objects.*)
 let new_id () =
@@ -150,13 +152,26 @@ let get_aabb collid =
   }
 
 (* move bounding box b by vector v *)
-let move_aabb (b: aabb) (v: fxy) : aabb =
+let bb_move (b: aabb) (v: fxy) : aabb =
   {
     b with pos = {
       x = b.pos.x + (int_of_float v.fx); 
       y = b.pos.y + (int_of_float v.fy); 
     }
   }
+
+let bb_get_center (b: aabb): xy =
+  {
+    x = b.pos.x + (b.dim.x/2);
+    y = b.pos.y + (b.dim.y/2);
+  }
+
+let dist_collid (c1: collidable) (c2: collidable): float =
+  let center1 = bb_get_center (get_aabb c1) in
+  let center2 = bb_get_center (get_aabb c2) in
+  let s1 = (fi (center1.x - center2.x)) ** 2. in
+  let s2 = (fi (center1.y - center2.y)) ** 2. in
+  sqrt (s1 +. s2)
 
 let vec_minus v1 v2 =
   {
@@ -190,9 +205,15 @@ let will_collide c1 c2 =
   let b2 = get_aabb c2 in
   let v1 = (get_obj c1).vel in
   let v2 = (get_obj c2).vel in
-  let b1 = vec_minus v1 v2 |> move_aabb b1 in
+  let b1 = vec_minus v1 v2 |> bb_move b1 in
   bb_collide b1 b2
     
+let move_collid collid =
+  match collid with
+  | Player(plt, s, o) ->
+     Player(plt, s, move o)
+  | Tile(tt, s, o) -> Tile(tt, s, move o)
+
 (* One-body collision *)
 let check_collision c1 c2 =
   match c1 with
@@ -203,22 +224,36 @@ let check_collision c1 c2 =
             (not (currently_colliding p t)) &&
             (po.vel.fy < 0.)
            )then
-          let fy = pl_jmp_vel in
-          let po = { po with vel = { po.vel with fy }} in
+          let po = { po with vel = { po.vel with fy = pl_jmp_vel };
+                             pos = { x = (po.pos.x + (int_of_float (po.vel.fx/.2.)));
+                                     y = (po.pos.y + (int_of_float (po.vel.fy/.2.)))}
+                   } in
           Player(plt, ps, po)
-        else p
+        else
+          move_collid p
      | _ -> c1
      end
   | _ -> c1
   
 
-let move_collid collid =
-  match collid with
-  | Player(plt, s, o) ->
-     Player(plt, s, move o)
-  | Tile(tt, s, o) -> Tile(tt, s, move o)
+let update_collid (collids: collidable list) (c1:collidable) : collidable =
+  let rec find_closest_collidable
+            (closest: collidable option)
+            (collids: collidable list): collidable option = 
+    match collids with
+    | [] -> closest
+    | candidate::t -> begin
+      match closest with
+      | None -> find_closest_collidable (Some candidate) t
+      | Some current_closest ->
+         if ((dist_collid c1 current_closest) < (dist_collid c1 candidate))
+         then find_closest_collidable closest t
+         else find_closest_collidable (Some candidate) t
+      end
+  in
+  let to_collide = find_closest_collidable (None) collids in
+  match to_collide with
+  | Some c2 -> check_collision c1 c2
+  | None -> move_collid c1
 
-let rec update_collid collids collid =
-  match collids with
-  | [] -> collid
-  | h::t -> update_collid t (check_collision collid h)
+

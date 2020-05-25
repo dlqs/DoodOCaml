@@ -54,7 +54,6 @@ let run_update_collid state collid =
      let keys = translate_keys () in
      player |> Object.update_player keys
             |> Object.update_collid state.collids
-            |> Object.move_collid
   | _ -> Object.update_collid state.collids collid
 
 let setup canvas =
@@ -87,10 +86,9 @@ let start canvas =
       Draw.clear_canvas canvas;
       player::state.collids |> Viewport.filter_into_view state.vpt
                             |> Draw.render ~draw_bb:dbb canvas;
-      
       let player = run_update_collid state player in
       let collids = List.map (run_update_collid state) state.collids in
-
+      
       let next_state = state in
       ignore (Dom_html.window##requestAnimationFrame 
                 (Js.wrap_callback (fun (t:float) ->

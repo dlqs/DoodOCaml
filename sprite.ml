@@ -72,13 +72,13 @@ let get_s_frame_size (typ: actor_typ) =
 let make_tile (typ) =
   let fs = get_s_frame_size (ATile(typ)) in
   match typ with
-  | Green -> setup_sprite "green_tile.png" 1 0 fs (0,0)
+  | Green -> setup_sprite "green_tile.png" ~bb_off:(0, 0) ~bb_sz:(40, 4) 1 0 fs (0,0)
 
 (*Calls to set sprite for either big or small mario.*)
 let make_player plt = 
   let fs = get_s_frame_size (APlayer(Standing)) in
   match plt with
-  | Standing -> setup_sprite "doodle.png" ~bb_off:(3,1) ~bb_sz:(11,15) 1 0 fs (0,0)
+  | Standing -> setup_sprite "doodle.png" 1 0 fs (0,0)
 
 (* Makes a sprite from provided [params]. *)
 let make_from_params params imgMap =
