@@ -3,11 +3,22 @@ open Sprite
 let jstr = Js.string
 let fi = float_of_int
 
+let render_debug_pt context collid (debug_pt: Object.xy option) =
+  let center = Object.get_aabb_center collid in
+  match debug_pt with
+  | None -> ()
+  | Some pt -> context##beginPath;
+               context##moveTo (fi center.x) (fi center.y);
+               context##lineTo (fi pt.x) (fi pt.y);
+               context##stroke;
+               ()
+                  
 let render ~draw_bb:(dbb:bool) canvas collids =
   List.iter(fun collid ->
       let sprite = Object.get_sprite collid in
+      let obj_st = Object.get_obj collid in
       let context = canvas##getContext (Dom_html._2d_) in
-      let pos = (Object.get_obj collid).pos in
+      let pos = obj_st.pos in
       let (sx, sy) = sprite.params.src_offset in
       let (sw, sh) = sprite.params.frame_size in
       let (dx, dy) = (pos.x,pos.y) in
@@ -33,6 +44,7 @@ let render ~draw_bb:(dbb:bool) canvas collids =
           (fi bbsx)
           (fi bbsy)
         );
+      ignore(render_debug_pt context collid obj_st.debug_pt);
     ) collids
 
 (*Used for animation updating. Canvas is cleared each frame and redrawn.*)
@@ -46,7 +58,6 @@ let clear_canvas canvas =
             (fi cw)
             (fi ch)
     )
-
 
 let _draw_background_color canvas = failwith "todo"
 let _debug f = Printf.ksprintf (fun s -> Firebug.console##log (jstr s)) f

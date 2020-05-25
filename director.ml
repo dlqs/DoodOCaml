@@ -52,9 +52,8 @@ let run_update_collid state collid =
   match collid with
   | Player(plt, s, o) as player ->
      let keys = translate_keys () in
-     player |> Object.update_player keys
-            |> Object.update_collid state.collids
-  | _ -> Object.update_collid state.collids collid
+     player |> Object.update_player state.collids keys
+  | _ -> collid
 
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
@@ -85,7 +84,7 @@ let start canvas =
       let dbb = check_bbox_enabled() in
       Draw.clear_canvas canvas;
       player::state.collids |> Viewport.filter_into_view state.vpt
-                            |> Draw.render ~draw_bb:dbb canvas;
+                            |> Draw.render ~draw_bb:true canvas;
       let player = run_update_collid state player in
       let collids = List.map (run_update_collid state) state.collids in
       

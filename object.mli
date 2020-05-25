@@ -26,6 +26,7 @@ type obj_state = {
     has_friction: bool;
     pos: xy;
     vel: fxy;
+    debug_pt: xy option;
   }
 
 (* Holds an instantiated object (also because object is a reserved word) *)
@@ -37,7 +38,9 @@ val get_obj: collidable -> obj_state
 
 val get_sprite: collidable -> Sprite.sprite
 
-val update_player: Actors.controls list -> collidable -> collidable
+val get_aabb_center: collidable -> xy
+
+val update_player: collidable list -> Actors.controls list -> collidable -> collidable
 
 val move_all: collidable list -> collidable list
 

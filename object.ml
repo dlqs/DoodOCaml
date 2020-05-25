@@ -23,6 +23,7 @@ type obj_state = {
     has_friction: bool;
     pos: xy;
     vel: fxy;
+    debug_pt: xy option;
   }
 
 type collidable =
@@ -62,13 +63,6 @@ let update_player_keys obj_st controls =
                { obj_st with vel = { obj_st.vel with fx; }}
                   
 
-let update_player controls player =
-  match player with
-  | Player(plt, s, o) -> 
-     let o = update_player_keys o controls in
-     Player(plt, s, o)
-  | _ -> failwith "Method called with non-player collidable"
-
 let update_pos obj_st =
   {
     obj_st with pos = {
@@ -103,6 +97,7 @@ let setup =
     has_friction = false;
     pos = {x = 0; y = 0};
     vel = {fx = 0.; fy = 0.};
+    debug_pt = None;
   }
 
 let setup_player pos =
@@ -151,6 +146,13 @@ let get_aabb collid =
     dim = { x = sx; y = sy };
   }
 
+let get_aabb_center collid =
+  let b = get_aabb collid in
+  {
+    x = b.pos.x + (b.dim.x/2);
+    y = b.pos.y + (b.dim.y/2);
+  }
+
 (* move bounding box b by vector v *)
 let bb_move (b: aabb) (v: fxy) : aabb =
   {
@@ -160,15 +162,9 @@ let bb_move (b: aabb) (v: fxy) : aabb =
     }
   }
 
-let bb_get_center (b: aabb): xy =
-  {
-    x = b.pos.x + (b.dim.x/2);
-    y = b.pos.y + (b.dim.y/2);
-  }
-
 let dist_collid (c1: collidable) (c2: collidable): float =
-  let center1 = bb_get_center (get_aabb c1) in
-  let center2 = bb_get_center (get_aabb c2) in
+  let center1 = get_aabb_center c1 in
+  let center2 = get_aabb_center c2 in
   let s1 = (fi (center1.x - center2.x)) ** 2. in
   let s2 = (fi (center1.y - center2.y)) ** 2. in
   sqrt (s1 +. s2)
@@ -215,7 +211,7 @@ let move_collid collid =
   | Tile(tt, s, o) -> Tile(tt, s, move o)
 
 (* One-body collision *)
-let check_collision c1 c2 =
+let do_collision c1 c2 =
   match c1 with
   | Player(plt, ps, po) as p ->
      begin match c2 with
@@ -223,37 +219,71 @@ let check_collision c1 c2 =
         if ((will_collide p t) &&
             (not (currently_colliding p t)) &&
             (po.vel.fy < 0.)
-           )then
+           )
+        then
           let po = { po with vel = { po.vel with fy = pl_jmp_vel };
                              pos = { x = (po.pos.x + (int_of_float (po.vel.fx/.2.)));
                                      y = (po.pos.y + (int_of_float (po.vel.fy/.2.)))}
                    } in
           Player(plt, ps, po)
         else
-          move_collid p
+          p
      | _ -> c1
      end
   | _ -> c1
-  
 
-let update_collid (collids: collidable list) (c1:collidable) : collidable =
-  let rec find_closest_collidable
-            (closest: collidable option)
-            (collids: collidable list): collidable option = 
+let find_closest_collidable
+      (c1: collidable)
+      (collids: collidable list)
+      ~(ignore_tiles: bool)
+    : collidable option = 
+  let rec helper closest collids ~ignore_tiles =
     match collids with
     | [] -> closest
-    | candidate::t -> begin
-      match closest with
-      | None -> find_closest_collidable (Some candidate) t
-      | Some current_closest ->
-         if ((dist_collid c1 current_closest) < (dist_collid c1 candidate))
-         then find_closest_collidable closest t
-         else find_closest_collidable (Some candidate) t
-      end
+    | candidate::t ->
+       match candidate with
+       | Tile(_,_,_) when ignore_tiles=true -> helper closest t ~ignore_tiles:ignore_tiles
+       | _ -> begin
+           match closest with
+           | None -> helper (Some candidate) t ~ignore_tiles:ignore_tiles
+           | Some current_closest ->
+              if ((dist_collid c1 current_closest) < (dist_collid c1 candidate))
+              then helper closest t ~ignore_tiles:ignore_tiles
+              else helper (Some candidate) t ~ignore_tiles:ignore_tiles
+         end
   in
-  let to_collide = find_closest_collidable (None) collids in
+  helper None collids ~ignore_tiles
+let update_debug_pt (po:obj_state) (c:collidable option): obj_state =
+  match c with
+  | None -> { po with debug_pt = None }
+  | Some c1 -> { po with debug_pt = Some (get_aabb_center c1) }
+
+let update_player collids controls player =
+  match player with
+  | Player(plt, ps, po) -> 
+     let po = update_player_keys po controls in
+     let player = Player(plt, ps, po) in
+     let ignore_tiles = if po.vel.fy < 0. then true else false in
+     let closest_collidable = find_closest_collidable player collids ~ignore_tiles:ignore_tiles in
+     let po = update_debug_pt po closest_collidable in
+     begin match closest_collidable with
+     | Some (Tile(tt, ts, t_o) as tile) -> 
+        if ((will_collide player tile) && (not (currently_colliding player tile))) then
+          let tab = get_aabb tile in
+          let dy = tab.pos.y + tab.dim.y in
+          let po = { po with vel = { po.vel with fy = pl_jmp_vel };
+                             pos = { po.pos with y = po.pos.y + dy}
+                   } in
+          Player(plt, ps, po)
+        else
+          Player(plt, ps, po)
+     | _ -> Player(plt, ps, po) end
+  | _ -> failwith "Method called with non-player collidable"
+
+let update_collid (collids: collidable list) (c1:collidable) : collidable =
+  let to_collide = find_closest_collidable c1 collids ~ignore_tiles:false in
   match to_collide with
-  | Some c2 -> check_collision c1 c2
+  | Some c2 -> do_collision c1 c2
   | None -> move_collid c1
 
 
