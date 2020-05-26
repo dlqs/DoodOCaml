@@ -42,10 +42,12 @@ val get_aabb_center: collidable -> xy
 
 val update: ?spr:Sprite.sprite -> ?pos:xy -> ?vel:fxy -> ?debug_pt:xy option -> collidable -> collidable
 
-val update_player: collidable list -> Actors.controls list -> collidable -> collidable
+val update_player: int -> collidable list -> Actors.controls list -> collidable -> collidable
 
 val make: Sprite.imgMap_t -> obj_prefab -> collidable 
 
 val make_all: Sprite.imgMap_t -> obj_prefab list -> collidable list
 
-val move_normally : collidable -> collidable
+val move : int -> collidable -> collidable
+
+val update_collid : int -> collidable -> collidable

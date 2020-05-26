@@ -31,8 +31,8 @@ type collidable =
   | Tile of tile_typ * Sprite.sprite * obj_state
 
 (*Variables*)
-let gravity = -0.12
-let friction_coef = 0.92
+let gravity = -0.12 (* constant change in velocity along y axis only *)
+let friction_coef = 0.92  (* coefficient of velocity along x axis only *)
 let pl_jmp_vel = 6.
 let pl_lat_vel = 2.
 let pl_max_lat_vel = 4.
@@ -69,6 +69,7 @@ let update ?spr ?pos ?vel ?debug_pt (collid:collidable) =
   let set_vel o vel = { o with vel; } in
   let set_pos o pos = { o with pos; } in
   let set_debug_pt o debug_pt = { o with debug_pt; } in
+  (* Actual *)
   match collid with
   | Player(plt, ps, po) ->
      let po = may ~f:set_vel po vel in
@@ -95,22 +96,30 @@ let rec update_player_keys collid controls =
   | [] -> collid
   | ctrl::t -> let vel = (get_obj collid).vel in
                let fx = match ctrl with
-               | Actors.CLeft ->   max (vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0)
-               | Actors.CRight ->  min (vel.fx +. pl_lat_vel) pl_max_lat_vel
+               | Actors.CLeft  -> max (vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0)
+               | Actors.CRight -> min (vel.fx +. pl_lat_vel) pl_max_lat_vel
                in
                update_player_keys (update ~vel:{ vel with fx=fx } collid) t
 
-let move_normally collid =
-  let obj_st = get_obj collid in
-  let pos =  {
-      x = max (obj_st.pos.x + int_of_float obj_st.vel.fx) 0;
-      y = max (obj_st.pos.y + int_of_float obj_st.vel.fy) 0;
-    } in
-  let vel = {
-      fy = obj_st.vel.fy +. if obj_st.has_gravity then gravity else 0.;
-      fx = obj_st.vel.fx *. friction_coef;
-    } in
-  update ~vel ~pos collid 
+(* Returns a moved collidable for its movement semantics *)
+let move cw collid =
+  let add_fxy_to_xy a b = { x = a.x + int_of_float b.fx;
+                            y = a.y + int_of_float b.fy; } in
+  (* Helper to wraparound the x-axis *)
+  let wraparound_x max_x a = { a with x = if a.x < 0 then max_x - a.x else
+                              if a.x >= max_x then max_x - a.x else a.x } in
+  match collid with
+  | Player(plt, ps, po) as player ->
+     let pos = wraparound_x cw (add_fxy_to_xy po.pos po.vel) in
+     let vel = {
+         fy = po.vel.fy +. gravity;
+         fx = po.vel.fx *. friction_coef;
+       } in
+     update ~vel ~pos player
+  | Tile(Blue,ts,t_o) as tile -> 
+     let pos = wraparound_x cw (add_fxy_to_xy t_o.pos t_o.vel) in
+     update ~pos tile
+  | _ -> failwith "Not implemented"
 
 let make imgMap prefab =
   let typ = fst prefab in
@@ -125,9 +134,15 @@ let make imgMap prefab =
               } in
      Player(plt, Sprite.make typ imgMap, po)
   | ATile(tt) ->
+     let vel = match tt with
+       | Green -> { fx = 0. ; fy = 0.; }
+       | Blue -> { fx = 1.; fy = 0.; }
+     in
      let t_o = { (setup ()) with
-                 pos;
-               } in
+                 has_gravity = false;
+                 has_friction = false;
+                 vel;
+                 pos; } in
      Tile(tt, Sprite.make typ imgMap, t_o)
 
 let rec make_all imgMap ops: collidable list =
@@ -236,31 +251,6 @@ let do_collision c1 c2 =
      end
   | _ -> c1
 
-(*
-let find_closest_collidable
-      (player: collidable)
-      (collids: collidable list)
-    : collidable option = 
-  let rec helper closest collids ~ignore_tiles =
-    match collids with
-    | [] -> closest
-    | candidate::t ->
-       match candidate with
-       | Tile(_,_,_) when ignore_tiles=true -> helper closest t ~ignore_tiles:ignore_tiles
-       | _ -> begin
-           match closest with
-           | None -> helper (Some candidate) t ~ignore_tiles:ignore_tiles
-           | Some current_closest ->
-              if ((dist_collid player current_closest) < (dist_collid player candidate))
-              then helper closest t ~ignore_tiles:ignore_tiles
-              else helper (Some candidate) t ~ignore_tiles:ignore_tiles
-         end
-  in
-  let closest_collidable = helper None collids ~ignore_tiles in
-  match closest_collidable with
-  | Some c -> if (will_collide player c) && not (currently_colliding player c) then Some c else None
-  | None -> None
-*)
 let find_closest_collidable player collids =
   let rec helper current_closest collids =
     match collids with
@@ -286,27 +276,19 @@ let update_debug_pt (co:collidable option) (player:collidable): collidable =
   | Some ct -> update ~debug_pt:(Some (get_aabb_center ct)) player
   | None -> player
 
-let update_player collids controls player =
+let update_player cw collids controls player =
   let closest_collidable = find_closest_collidable player collids in
   let player = update_player_keys player controls in
   let player = update_debug_pt closest_collidable player in
   match closest_collidable with
-  | None -> move_normally player
+  | None -> move cw player
   | Some closest_collidable -> 
      let po = get_obj player in
      let vel = { po.vel with fy = pl_jmp_vel } in
      update ~vel player
-  (*let player = begin match closest_collidable with
-               | Some (Tile(tt, ts, t_o) as tile) -> 
-                  let tab = get_aabb tile in
-                  let center = get_aabb_center tile in
-                  let dy = tab.pos.y + tab.dim.y in
-                  let po = { po with vel = { po.vel with fy = pl_jmp_vel };
-                           } in
-                  Player(plt, ps, po)
-               | _ ->
-                  Player(plt, ps, po)
-               end in
-   *)
 
-
+let update_collid cw collid =
+  match collid with
+  | Player(_,_,_) as player -> failwith "Call update_player instead"
+  | Tile(Blue,_,_) as tile -> move cw tile
+  | _ -> collid

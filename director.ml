@@ -53,8 +53,10 @@ let run_update_collid state collid =
   match collid with
   | Player(plt, ps, po) as player ->
      let keys = translate_keys () in
-     player |> Object.update_player state.collids keys
-  | _ -> collid
+     Object.update_player state.cw state.collids keys player
+  | _ as non_player -> Object.update_collid state.cw non_player
+
+let run_update_collids state collids = List.map (run_update_collid state) collids
 
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
@@ -63,7 +65,8 @@ let setup canvas =
   let imgMap = Sprite.setup ctx in
   let player = Object.make imgMap (APlayer(Standing), { x=cw/2; y = cw/8 }) in
   let vpt = Viewport.make (cw, ch) in
-  let collids = Procedural_generator.generate { x = 0; y = 0 } { x = cw; y = ch }
+  let collids = Procedural_generator.generate_one
+                (*let collids = Procedural_generator.generate { x = 0; y = 0 } { x = cw; y = ch }*)
                 |> Object.make_all imgMap
   in
   ({
@@ -82,15 +85,15 @@ let setup canvas =
 
 let start canvas =
   let rec game_loop time state player = begin
-
+      (*Draw phase*)
       Draw.clear_canvas canvas;
       state.collids@[player] |> Viewport.filter_into_view state.vpt
                              |> Draw.render ~draw_bb:(check_bbox_enabled ()) canvas;
+      (*Update phase*)
       let player = run_update_collid state player in
-      let collids = List.map (run_update_collid state) state.collids in
+      let collids = run_update_collids state state.collids in
       let vpt = Viewport.move state.vpt player in
-
-      let next_state = { state with time; vpt; } in
+      let next_state = { state with time; vpt; collids; } in
       ignore (Dom_html.window##requestAnimationFrame 
                 (Js.wrap_callback (fun (t:float) ->
                      game_loop t next_state player));)

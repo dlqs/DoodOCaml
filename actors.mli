@@ -11,6 +11,7 @@ type pl_typ =
 
 type tile_typ =
   | Green
+  | Blue
 
 type actor_typ =
   | APlayer of pl_typ
