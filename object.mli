@@ -22,8 +22,6 @@ type obj_prefab = actor_typ * xy
 
 type obj_state = {
     id: int;
-    has_gravity: bool;
-    has_friction: bool;
     pos: xy;
     vel: fxy;
     debug_pt: xy option;

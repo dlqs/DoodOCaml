@@ -19,8 +19,6 @@ type obj_prefab = actor_typ * xy
 
 type obj_state = {
     id: int;
-    has_gravity: bool;
-    has_friction: bool;
     pos: xy;
     vel: fxy;
     debug_pt: xy option;
@@ -49,8 +47,6 @@ let new_id () =
 let setup () =
   {
     id = new_id();
-    has_gravity = false;
-    has_friction = false;
     pos = {x = 0; y = 0};
     vel = {fx = 0.; fy = 0.};
     debug_pt = None;
@@ -134,8 +130,6 @@ let make imgMap prefab =
   match typ with
   | APlayer(plt) ->
      let po = { (setup ()) with
-                has_gravity = true;
-                has_friction = true;
                 vel = { fx = 0.; fy = pl_jmp_vel };
                 pos;
               } in
@@ -146,8 +140,6 @@ let make imgMap prefab =
        | Blue -> { fx = 1.; fy = 0.; }
      in
      let t_o = { (setup ()) with
-                 has_gravity = false;
-                 has_friction = false;
                  vel;
                  pos; } in
      Tile(tt, Sprite.make typ imgMap, t_o)
