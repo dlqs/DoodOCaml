@@ -105,11 +105,16 @@ let rec update_player_keys collid controls =
 let move cw collid =
   let add_fxy_to_xy a b = { x = a.x + int_of_float b.fx;
                             y = a.y + int_of_float b.fy; } in
-  (* Helper to wraparound the x-axis *)
-  let wraparound_x max_x a = { a with x = if a.x < 0 then max_x - a.x else
-                              if a.x >= max_x then max_x - a.x else a.x } in
+  (* Helper to wraparound position along the x-axis *)
+  let wraparound_x max_x pos = { pos with x = if pos.x < 0 then max_x - pos.x else
+                              if pos.x > max_x then max_x - pos.x else pos.x } in
+  (* Helper to bounce (i.e.flip) velocity along the x-axis, including width of obj*)
+  let bouncearound_x width max_x pos vel = { vel with fx =
+                 if (pos.x <= 0 && vel.fx < 0.) || (pos.x + width >= max_x && vel.fx > 0.)
+                 then vel.fx*.(-1.0) else vel.fx } in
   match collid with
   | Player(plt, ps, po) as player ->
+     (* Player will wraparound and is the only collidable subject to friction, gravity. *)
      let pos = wraparound_x cw (add_fxy_to_xy po.pos po.vel) in
      let vel = {
          fy = po.vel.fy +. gravity;
@@ -117,8 +122,10 @@ let move cw collid =
        } in
      update ~vel ~pos player
   | Tile(Blue,ts,t_o) as tile -> 
-     let pos = wraparound_x cw (add_fxy_to_xy t_o.pos t_o.vel) in
-     update ~pos tile
+     let pos = add_fxy_to_xy t_o.pos t_o.vel in
+     let width = fst (get_sprite tile).params.bbox_size in
+     let vel = bouncearound_x width cw pos t_o.vel in
+     update ~vel ~pos tile
   | _ -> failwith "Not implemented"
 
 let make imgMap prefab =
