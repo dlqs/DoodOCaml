@@ -84,8 +84,8 @@ let start canvas =
   let rec game_loop time state player = begin
 
       Draw.clear_canvas canvas;
-      player::state.collids |> Viewport.filter_into_view state.vpt
-                            |> Draw.render ~draw_bb:(check_bbox_enabled ()) canvas;
+      state.collids@[player] |> Viewport.filter_into_view state.vpt
+                             |> Draw.render ~draw_bb:(check_bbox_enabled ()) canvas;
       let player = run_update_collid state player in
       let collids = List.map (run_update_collid state) state.collids in
       let vpt = Viewport.move state.vpt player in
