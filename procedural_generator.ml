@@ -31,5 +31,5 @@ let generate (bot_left: xy) (top_right: xy) : obj_prefab list =
   in
   generate_layer bot_left.y top_right.y []
 
-(* Generate one item; for testing purposes *)
-let generate_one = [(Actors.ATile(Blue), { x = 0; y = 20 })]
+let generate_debug =
+  [(Actors.ATile(Blue), { x = 0; y = 20 })]
