@@ -204,6 +204,16 @@ let will_collide c1 c2 =
   let b1 = vec_minus v1 v2 |> bb_move b1 in
   bb_collide b1 b2
 
+(* Returns true if bb of c1 is above c2*)
+let is_bbox_above c1 c2 =
+  let b1 = get_aabb c1 in
+  let b2 = get_aabb c2 in
+  b1.pos.y > (b2.pos.y + b2.dim.y)
+
+(* Returns the closer bbox c2/c3 to c1 *)
+let closer_bbox c1 c2 c3 =
+  if (dist_collid c1 c2) < (dist_collid c1 c3) then c2 else c3
+
 (* One-body collision *)
 let do_collision c1 c2 =
   match c1 with
@@ -226,10 +236,10 @@ let do_collision c1 c2 =
      end
   | _ -> c1
 
+(*
 let find_closest_collidable
       (player: collidable)
       (collids: collidable list)
-      ~(ignore_tiles: bool)
     : collidable option = 
   let rec helper closest collids ~ignore_tiles =
     match collids with
@@ -250,19 +260,36 @@ let find_closest_collidable
   match closest_collidable with
   | Some c -> if (will_collide player c) && not (currently_colliding player c) then Some c else None
   | None -> None
-
+*)
+let find_closest_collidable player collids =
+  let rec helper current_closest collids =
+    match collids with
+    | [] -> current_closest
+    | h::t ->
+       match h with
+       | Tile(_,_,_) as tile ->
+          begin
+            if not (is_bbox_above player tile) then helper current_closest t else
+            match current_closest with
+            | None -> helper (Some h) t
+            | Some i ->
+               let closer = closer_bbox player i h in
+               helper (Some closer) t
+          end
+       | _ -> failwith "not implemented"
+  in
+  helper None collids
+          
 let update_debug_pt (co:collidable option) (player:collidable): collidable =
   match co with
-  | Some ct ->
-     update ~debug_pt:(Some (get_aabb_center ct)) player
-  | None ->
-     player
+  | Some ct -> update ~debug_pt:(Some (get_aabb_center ct)) player
+  | None -> player
 
 let update_player collids controls player =
   let player = update_player_keys player controls in
   let po = get_obj player in
   let ignore_tiles = if po.vel.fy < 0. then true else false in
-  let closest_collidable = find_closest_collidable player collids ~ignore_tiles in
+  let closest_collidable = find_closest_collidable player collids in
   let player = update_debug_pt closest_collidable player in
   (*let player = begin match closest_collidable with
                | Some (Tile(tt, ts, t_o) as tile) -> 
@@ -277,11 +304,5 @@ let update_player collids controls player =
                end in
    *)
   move_normally player
-
-let update_collid (collids: collidable list) (c1:collidable) : collidable =
-  let to_collide = find_closest_collidable c1 collids ~ignore_tiles:false in
-  match to_collide with
-  | Some c2 -> do_collision c1 c2
-  | None -> move_normally c1
 
 

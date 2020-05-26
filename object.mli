@@ -48,6 +48,4 @@ val make: Sprite.imgMap_t -> obj_prefab -> collidable
 
 val make_all: Sprite.imgMap_t -> obj_prefab list -> collidable list
 
-val update_collid: collidable list -> collidable -> collidable
-
 val move_normally : collidable -> collidable
