@@ -26,6 +26,7 @@ type state = {
   collids: collidable list;
   imgMap: Sprite.imgMap_t;
   vpt: Viewport.viewport;
+  time: float;
   score: int;
   game_over: bool;
 }
@@ -48,11 +49,21 @@ let translate_keys () =
   let ctrls = [(k.left,Actors.CLeft);(k.right,Actors.CRight);] in
   List.fold_left (fun a x -> if fst x then (snd x)::a else a) [] ctrls
 
+let debug_set_time = ref 0.
+let debug_set_pt = ref None
+
+let update_debug_trail time debug_pt player =
+  match debug_pt with
+  | Some pt -> debug_set_time := time; 
+               debug_set_pt := debug_pt; player
+  | None -> if (time -. !debug_set_time) > 5000. then player else Object.update ~debug_pt player
+
 let run_update_collid state collid =
   match collid with
-  | Player(plt, s, o) as player ->
+  | Player(plt, ps, po) as player ->
      let keys = translate_keys () in
      player |> Object.update_player state.collids keys
+            |> update_debug_trail state.time po.debug_pt
   | _ -> collid
 
 let setup canvas =
@@ -60,9 +71,9 @@ let setup canvas =
   let cw = canvas##.width in
   let ch = canvas##.height in
   let imgMap = Sprite.setup ctx in
-  let player = Object.initial_make_player imgMap cw ch in
+  let player = Object.make imgMap (APlayer(Standing), { x=cw/2; y = cw/8 }) in
   let vpt = Viewport.make (cw, ch) in
-  let collids = Procedural_generator.generate_one
+  let collids = Procedural_generator.generate { x = 0; y = 0 } { x = cw; y = ch }
                 |> Object.make_all imgMap
   in
   ({
@@ -73,6 +84,7 @@ let setup canvas =
       collids;
       imgMap;
       vpt = vpt;
+      time = 0.;
       score = 0;
       game_over = false;
     },
@@ -88,10 +100,10 @@ let start canvas =
       let player = run_update_collid state player in
       let collids = List.map (run_update_collid state) state.collids in
       
-      let next_state = state in
+      let next_state = { state with time } in
       ignore (Dom_html.window##requestAnimationFrame 
                 (Js.wrap_callback (fun (t:float) ->
-                     game_loop t state player));)
+                     game_loop t next_state player));)
     end in
   let (initial_state, initial_player) = setup canvas in
   game_loop 0. initial_state initial_player
