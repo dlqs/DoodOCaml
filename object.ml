@@ -253,14 +253,16 @@ let find_closest_collidable
 
 let update_debug_pt (co:collidable option) (player:collidable): collidable =
   match co with
-  | Some ct -> update ~debug_pt:(Some (get_aabb_center ct)) player
-  | None -> player
+  | Some ct ->
+     update ~debug_pt:(Some (get_aabb_center ct)) player
+  | None ->
+     player
 
 let update_player collids controls player =
   let player = update_player_keys player controls in
   let po = get_obj player in
   let ignore_tiles = if po.vel.fy < 0. then true else false in
-  let closest_collidable = find_closest_collidable player collids ~ignore_tiles:ignore_tiles in
+  let closest_collidable = find_closest_collidable player collids ~ignore_tiles in
   let player = update_debug_pt closest_collidable player in
   (*let player = begin match closest_collidable with
                | Some (Tile(tt, ts, t_o) as tile) -> 

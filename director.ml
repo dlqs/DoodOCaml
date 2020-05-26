@@ -52,18 +52,26 @@ let translate_keys () =
 let debug_set_time = ref 0.
 let debug_set_pt = ref None
 
-let update_debug_trail time debug_pt player =
+let update_debug_trail time player =
+  let po = Object.get_obj player in
+  let debug_pt = po.debug_pt in
   match debug_pt with
-  | Some pt -> debug_set_time := time; 
+  | Some pt ->
+     debug_set_time := time; 
                debug_set_pt := debug_pt; player
-  | None -> if (time -. !debug_set_time) > 5000. then player else Object.update ~debug_pt player
+  | None ->
+     Printf.printf "hello\n";
+     let passed = time -. !debug_set_time in
+     if passed > 5000.
+     then player
+     else
+       Object.update ~debug_pt:!debug_set_pt player
 
 let run_update_collid state collid =
   match collid with
   | Player(plt, ps, po) as player ->
      let keys = translate_keys () in
      player |> Object.update_player state.collids keys
-            |> update_debug_trail state.time po.debug_pt
   | _ -> collid
 
 let setup canvas =
