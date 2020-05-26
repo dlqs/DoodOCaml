@@ -5,6 +5,8 @@ type viewport = {
   v_dim: Object.xy;
 }
 
+let pl_y_offset_ratio = 0.35
+
 let make (vx,vy) = 
   {
     pos = {x = 0; y = 0;};
@@ -38,4 +40,11 @@ let translate_coords vpt collid =
 let filter_into_view vpt collids =
   collids |> List.filter (fun collid -> in_view vpt collid)
           |> List.map (fun collid -> translate_coords vpt collid)
+
+let move (vpt:viewport) (player:collidable) : viewport =
+  let botY = (get_obj player).pos.y - (int_of_float (
+                                           float_of_int vpt.v_dim.y *. pl_y_offset_ratio
+                                      )) in
+  let y = max vpt.pos.y botY in
+  { vpt with pos = { vpt.pos with y }}
 

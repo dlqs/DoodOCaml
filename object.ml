@@ -31,9 +31,9 @@ type collidable =
   | Tile of tile_typ * Sprite.sprite * obj_state
 
 (*Variables*)
-let gravity = -0.1
+let gravity = -0.12
 let friction_coef = 0.92
-let pl_jmp_vel = 4.
+let pl_jmp_vel = 6.
 let pl_lat_vel = 2.
 let pl_max_lat_vel = 4.
 
@@ -120,7 +120,7 @@ let make imgMap prefab =
      let po = { (setup ()) with
                 has_gravity = true;
                 has_friction = true;
-                vel = { fx = 0.; fy = 5. };
+                vel = { fx = 0.; fy = pl_jmp_vel };
                 pos;
               } in
      Player(plt, Sprite.make typ imgMap, po)
@@ -270,6 +270,7 @@ let find_closest_collidable player collids =
        | Tile(_,_,_) as tile ->
           begin
             if not (is_bbox_above player tile) then helper current_closest t else
+            if not (will_collide player tile) then helper current_closest t else
             match current_closest with
             | None -> helper (Some h) t
             | Some i ->
@@ -286,11 +287,15 @@ let update_debug_pt (co:collidable option) (player:collidable): collidable =
   | None -> player
 
 let update_player collids controls player =
-  let player = update_player_keys player controls in
-  let po = get_obj player in
-  let ignore_tiles = if po.vel.fy < 0. then true else false in
   let closest_collidable = find_closest_collidable player collids in
+  let player = update_player_keys player controls in
   let player = update_debug_pt closest_collidable player in
+  match closest_collidable with
+  | None -> move_normally player
+  | Some closest_collidable -> 
+     let po = get_obj player in
+     let vel = { po.vel with fy = pl_jmp_vel } in
+     update ~vel player
   (*let player = begin match closest_collidable with
                | Some (Tile(tt, ts, t_o) as tile) -> 
                   let tab = get_aabb tile in
@@ -303,6 +308,5 @@ let update_player collids controls player =
                   Player(plt, ps, po)
                end in
    *)
-  move_normally player
 
 

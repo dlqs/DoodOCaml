@@ -9,3 +9,5 @@ type viewport = {
 val make : int*int -> viewport
 
 val filter_into_view: viewport -> collidable list -> collidable list
+
+val move: viewport -> collidable -> viewport
