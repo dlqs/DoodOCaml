@@ -296,7 +296,14 @@ let update_player cw collids controls player =
 let update_collid cw collid =
   match collid with
   | Player(_,_,_) as player -> failwith "Call update_player instead"
-  | Tile(Blue,_,_) as tile -> move cw tile
+  | Tile(Blue,_,_) as tile ->
+     (* Blue tiles bounce along x axis *)
+     move cw tile
   | Tile(Yellow,_,_) as tile ->
+     (* Static but explode randomly *)
      Sprite.update_animation (get_sprite tile); tile;
+  | Tile(White,_,_) as tile ->
+     (* Static but explode on first touch *)
+     tile
   | _ -> collid
+
