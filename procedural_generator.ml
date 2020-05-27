@@ -33,7 +33,7 @@ let generate (bot_left: xy) (top_right: xy) : obj_prefab list =
 
 let generate_debug =
   [
-    (Actors.ATile(Yellow), { x = 0; y = 20 });
+    (Actors.ATile(White), { x = 0; y = 20 });
     (Actors.ATile(Green), { x = 0; y = 0 });
     (Actors.ATile(Green), { x = 50; y = 0 })
   ]

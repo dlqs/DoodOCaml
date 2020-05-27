@@ -27,7 +27,7 @@ type sprite =
   }
 
 let imgdir = "./sprites/"
-let imgsrcs = ["green_tile.png";"doodle.png";"tiles.png"]
+let imgsrcs = ["doodle.png";"tiles.png"]
 
 (* Creates the HTML image elements first *)
 let setup ctx =
@@ -72,9 +72,10 @@ let get_s_frame_size (typ: actor_typ) =
 let make_tile (typ) =
   let fs = get_s_frame_size (ATile(typ)) in
   match typ with
-  | Green -> setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(42, 10) 1 0 (42, 10) (0,0)
-  | Blue -> setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(42, 10) 1 0 (42, 10) (0,10)
-  | Yellow -> setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(42, 10) 3 150 (42, 10) (0,20)
+  | Green ->  setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 1 0 (40, 10) (0,0)
+  | Blue ->   setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 1 0 (40, 10) (0,10)
+  | Yellow -> setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 2 50 (40, 10) (0,20)
+  | White ->  setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 1 0 (40, 10) (0,30)
 
 (*Calls to set sprite for either big or small mario.*)
 let make_player plt = 

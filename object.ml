@@ -141,9 +141,8 @@ let make imgMap created_at prefab =
      Player(plt, Sprite.make typ imgMap, po)
   | ATile(tt) ->
      let vel = match tt with
-       | Green -> { fx = 0. ; fy = 0.; }
+       | Green | Yellow | White -> { fx = 0. ; fy = 0.; }
        | Blue -> { fx = 1.; fy = 0.; }
-       | Yellow -> { fx = 0.; fy = 0.; }
      in
      let t_o = { (setup ()) with
                  vel;
