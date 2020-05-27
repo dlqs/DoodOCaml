@@ -60,7 +60,7 @@ let run_update_collid state collid =
 let run_update_collids state collids = List.map (run_update_collid state) collids
 
 let run_generate_collids state : state =
-  let prerender_height = state.vpt.pos.y + 2*state.vpt.v_dim.y in
+  let prerender_height = state.vpt.pos.y + state.vpt.v_dim.y in
   if (prerender_height > state.generated_h) then
     let new_collids = Object.make_all state.imgMap state.time
                         (Procedural_generator.generate { x = 0; y = state.generated_h }
@@ -89,11 +89,11 @@ let setup canvas =
   let imgMap = Sprite.setup ctx in
   let player = Object.make imgMap 0. (APlayer(Standing), { x=cw/2; y = cw/8 }) in
   let vpt = Viewport.make (cw, ch) in
-  let debug = true in
+  let debug = false in
   let collids = Object.make_all imgMap 0.
                   (if debug
                   then Procedural_generator.generate_debug
-                  else Procedural_generator.generate { x = 0; y = 0 } { x = cw; y = 2*ch }) in
+                  else Procedural_generator.generate { x = 0; y = 0 } { x = cw; y = ch }) in
   ({
       bgd = None;
       ctx;
@@ -104,7 +104,7 @@ let setup canvas =
       vpt = vpt;
       time = 0.;
       score = 0;
-      generated_h = 2*ch;
+      generated_h = ch;
       game_over = false;
     },
    player)
