@@ -24,6 +24,7 @@ type obj_state = {
     id: int;
     pos: xy;
     vel: fxy;
+    created_at: float;
     debug_pt: xy option;
   }
 
@@ -42,9 +43,9 @@ val update: ?spr:Sprite.sprite -> ?pos:xy -> ?vel:fxy -> ?debug_pt:xy option -> 
 
 val update_player: int -> collidable list -> Actors.controls list -> collidable -> collidable
 
-val make: Sprite.imgMap_t -> obj_prefab -> collidable 
+val make: Sprite.imgMap_t -> float -> obj_prefab -> collidable 
 
-val make_all: Sprite.imgMap_t -> obj_prefab list -> collidable list
+val make_all: Sprite.imgMap_t -> float -> obj_prefab list -> collidable list
 
 val move : int -> collidable -> collidable
 

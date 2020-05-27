@@ -21,6 +21,7 @@ type obj_state = {
     id: int;
     pos: xy;
     vel: fxy;
+    created_at: float;
     debug_pt: xy option;
   }
 
@@ -49,6 +50,7 @@ let setup () =
     id = new_id();
     pos = {x = 0; y = 0};
     vel = {fx = 0.; fy = 0.};
+    created_at = 0.;
     debug_pt = None;
   }
 
@@ -124,7 +126,7 @@ let move cw collid =
      update ~vel ~pos tile
   | _ -> failwith "Not implemented"
 
-let make imgMap prefab =
+let make imgMap created_at prefab =
   let typ = fst prefab in
   let pos = snd prefab in
   match typ with
@@ -132,6 +134,7 @@ let make imgMap prefab =
      let po = { (setup ()) with
                 vel = { fx = 0.; fy = pl_jmp_vel };
                 pos;
+                created_at;
               } in
      Player(plt, Sprite.make typ imgMap, po)
   | ATile(tt) ->
@@ -142,13 +145,15 @@ let make imgMap prefab =
      in
      let t_o = { (setup ()) with
                  vel;
-                 pos; } in
+                 pos;
+                 created_at;
+               } in
      Tile(tt, Sprite.make typ imgMap, t_o)
 
-let rec make_all imgMap ops: collidable list =
+let rec make_all imgMap created_at ops: collidable list =
   match ops with
   | [] -> []
-  | h::t -> (make imgMap h)::make_all imgMap t
+  | h::t -> (make imgMap created_at h)::make_all imgMap created_at t
 
 let get_aabb collid =
   let spr = ((get_sprite collid).params) in
