@@ -3,7 +3,7 @@ module Html = Dom_html
 module Pg = Procedural_generator
 
 let loadCount =  ref 0
-let imgsToLoad = 4
+let imgsToLoad = 2
 
 (*Canvas is chosen from the index.html file. The context is obtained from
  *the canvas. Listeners are added. A level is generated and the general
@@ -31,7 +31,7 @@ let inc_counter _ =
 (*Used for concurrency issues.*)
 let preload _ =
   let root_dir = "sprites/" in
-  let imgs = ["blocks.png";"items.png";"enemies.png";"mario-small.png";"green_tile.png"] in
+  let imgs = ["green_tile.png";"tiles.png"] in
   List.map (fun img_src ->
     let img_src = root_dir ^ img_src in
     let img = (Html.createImg Html.document) in
