@@ -87,7 +87,7 @@ let setup canvas =
   let imgMap = Sprite.setup ctx in
   let player = Object.make imgMap (APlayer(Standing), { x=cw/2; y = cw/8 }) in
   let vpt = Viewport.make (cw, ch) in
-  let debug = false in
+  let debug = true in
   let collids = Object.make_all imgMap
                   (if debug
                   then Procedural_generator.generate_debug
@@ -109,7 +109,6 @@ let setup canvas =
 
 let start canvas =
   let rec game_loop time state player = begin
-      Printf.printf "%d\n" (List.length state.collids);
       (*Draw phase*)
       Draw.clear_canvas canvas;
       state.collids@[player] |> Viewport.filter_into_view state.vpt
