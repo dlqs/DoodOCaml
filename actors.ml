@@ -11,6 +11,7 @@ type pl_typ =
 type tile_typ =
   | Green
   | Blue
+  | Yellow
 
 (* actors are abstract objects *)
 type actor_typ =

@@ -74,6 +74,7 @@ let make_tile (typ) =
   match typ with
   | Green -> setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(42, 10) 1 0 (42, 10) (0,0)
   | Blue -> setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(42, 10) 1 0 (42, 10) (0,10)
+  | Yellow -> setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(42, 10) 3 150 (42, 10) (0,20)
 
 (*Calls to set sprite for either big or small mario.*)
 let make_player plt = 

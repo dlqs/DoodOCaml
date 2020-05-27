@@ -138,6 +138,7 @@ let make imgMap prefab =
      let vel = match tt with
        | Green -> { fx = 0. ; fy = 0.; }
        | Blue -> { fx = 1.; fy = 0.; }
+       | Yellow -> { fx = 0.; fy = 0.; }
      in
      let t_o = { (setup ()) with
                  vel;
@@ -290,4 +291,6 @@ let update_collid cw collid =
   match collid with
   | Player(_,_,_) as player -> failwith "Call update_player instead"
   | Tile(Blue,_,_) as tile -> move cw tile
+  | Tile(Yellow,_,_) as tile ->
+     Sprite.update_animation (get_sprite tile); tile;
   | _ -> collid
