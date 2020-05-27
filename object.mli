@@ -25,6 +25,7 @@ type obj_state = {
     pos: xy;
     vel: fxy;
     created_at: float;
+    killed: bool;
     debug_pt: xy option;
   }
 

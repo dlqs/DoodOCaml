@@ -22,6 +22,7 @@ type obj_state = {
     pos: xy;
     vel: fxy;
     created_at: float;
+    killed: bool;
     debug_pt: xy option;
   }
 
@@ -51,6 +52,7 @@ let setup () =
     pos = {x = 0; y = 0};
     vel = {fx = 0.; fy = 0.};
     created_at = 0.;
+    killed = false;
     debug_pt = None;
   }
 

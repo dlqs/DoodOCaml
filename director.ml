@@ -74,7 +74,9 @@ let run_remove_collids state collids =
   let rec remove_helper remain_collids collids =
     match collids with
     | [] -> remain_collids
-    | h::t -> if state.vpt.pos.y > (get_obj h).pos.y + 24
+    | h::t -> let obj_st = get_obj h in
+              if (obj_st.killed || 
+                 (state.vpt.pos.y > obj_st.pos.y + 24))
               then remove_helper remain_collids t
               else remove_helper (h::remain_collids) t
   in
