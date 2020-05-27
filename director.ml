@@ -60,13 +60,13 @@ let run_update_collid state collid =
 let run_update_collids state collids = List.map (run_update_collid state) collids
 
 let run_generate_collids state : state =
-  let prerender_height = state.vpt.pos.y + state.vpt.v_dim.y in
+  let prerender_height = state.vpt.pos.y + state.vpt.dim.y in
   if (prerender_height > state.generated_h) then
     let new_collids = Object.make_all state.imgMap state.time
                         (Procedural_generator.generate { x = 0; y = state.generated_h }
-                           { x = state.cw; y = state.generated_h + state.vpt.v_dim.y }) in
+                           { x = state.cw; y = state.generated_h + state.vpt.dim.y }) in
     let collids = state.collids@new_collids in
-    let generated_h = state.generated_h + state.vpt.v_dim.y in
+    let generated_h = state.generated_h + state.vpt.dim.y in
     { state with collids; generated_h }
   else state
 
