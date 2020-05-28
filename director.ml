@@ -18,7 +18,7 @@ let translate_keys () =
   let ctrls = [(k.left,CLeft);(k.right,CRight);] in
   List.fold_left (fun a x -> if fst x then (snd x)::a else a) [] ctrls
 
-(* Generated one screen at a time *)
+(* Generates new collidables for next screen *)
 let generate_collids state collids =
   let new_collids =
     if state.next_generated_height > state.last_generated_height
@@ -26,6 +26,7 @@ let generate_collids state collids =
     else [] in
   collids@new_collids
 
+(* Returns collidables without removed ones *)
 let remove_collids state collids =
   collids |> List.filter (fun collid -> not (Viewport.below_vpt state.vpt collid))
           |> List.filter (fun collid -> not (Object.get_obj collid).killed)
@@ -36,11 +37,12 @@ let update_draw_bb state =
 let update_time time state =
   { state with time; }
 
-(* Move viewport upwards as player moves upwards *)
+(* Moves viewport upwards as player moves upwards *)
 let update_viewport player state =
   let vpt = Viewport.move state.vpt player in
   { state with vpt; }
 
+(* Reached current generated level: sets new height for the next one *)
 let update_generated_height state =
   let last_generated_height =
     if state.last_generated_height < state.next_generated_height
@@ -52,12 +54,12 @@ let update_generated_height state =
     else state.next_generated_height in
   { state with last_generated_height; next_generated_height; }
 
-(* Handle player only and player-collids collisions *)
+(* Handles player only and player-collids collisions *)
 let update_player_collids state player collids =
   let keys = translate_keys() in
   Object.update_player_collids state keys player collids
 
-(* Handle collids only (there are no collid-collid collisions) *)
+(* Handles collids only (there are no collid-collid collisions) *)
 let update_collids state collids =
   List.map (Object.update_collid state) collids
 
