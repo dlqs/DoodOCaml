@@ -1,34 +1,4 @@
-open Actors
-
-type xy = {
-    x: int;
-    y: int;
-}
-
-type fxy = {
-    fx: float;
-    fy: float;
-  }
-
-type aabb = {
-    pos: xy;
-    dim: xy;
-  }
-
-type obj_prefab = actor_typ * xy
-
-type obj_state = {
-    id: int;
-    pos: xy;
-    vel: fxy;
-    created_at: float;
-    killed: bool;
-    debug_pt: xy option;
-  }
-
-type collidable =
-  | Player of pl_typ * Sprite.sprite * obj_state
-  | Tile of tile_typ * Sprite.sprite * obj_state
+open Types
 
 (*Variables*)
 let gravity = -0.12 (* constant change in velocity along y axis only *)
@@ -46,7 +16,7 @@ let new_id () =
   id_counter := !id_counter + 1;
   !id_counter
 
-let setup () =
+let setup () : obj_state =
   {
     id = new_id();
     pos = {x = 0; y = 0};
@@ -55,6 +25,34 @@ let setup () =
     killed = false;
     debug_pt = None;
   }
+
+let make_player (typ:pl_typ) (pos:xy) (created_at:float) : collidable =  
+  match typ with
+  | Standing -> 
+     let po = { (setup ()) with
+                vel = { fx = 0.; fy = pl_jmp_vel };
+                pos;
+                created_at;
+              } in
+     Player(Standing, Sprite.make PStanding, po)
+
+let make_tile (typ:tile_typ) (pos:xy) (created_at:float) : collidable =  
+  let sprite = match typ with
+    | Green -> Sprite.make TGreen
+    | Yellow -> Sprite.make TYellow
+    | White -> Sprite.make TWhite
+    | Blue -> Sprite.make TBlue
+  in
+  let vel = match typ with
+    | Green | Yellow | White -> { fx = 0. ; fy = 0.; }
+    | Blue -> { fx = 1.; fy = 0.; }
+  in
+  let t_o = { (setup ()) with
+              vel;
+              pos;
+              created_at;
+            } in
+  Tile(typ, sprite, t_o)
 
 let update ?spr ?pos ?vel ?debug_pt (collid:collidable) =
   (* Helpers *)
@@ -96,8 +94,8 @@ let rec update_player_keys collid controls =
   | [] -> collid
   | ctrl::t -> let vel = (get_obj collid).vel in
                let fx = match ctrl with
-               | Actors.CLeft  -> max (vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0)
-               | Actors.CRight -> min (vel.fx +. pl_lat_vel) pl_max_lat_vel
+               | CLeft  -> max (vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0)
+               | CRight -> min (vel.fx +. pl_lat_vel) pl_max_lat_vel
                in
                update_player_keys (update ~vel:{ vel with fx=fx } collid) t
 
@@ -128,33 +126,6 @@ let move cw collid =
      update ~vel ~pos tile
   | _ -> failwith "Not implemented"
 
-let make imgMap created_at prefab =
-  let typ = fst prefab in
-  let pos = snd prefab in
-  match typ with
-  | APlayer(plt) ->
-     let po = { (setup ()) with
-                vel = { fx = 0.; fy = pl_jmp_vel };
-                pos;
-                created_at;
-              } in
-     Player(plt, Sprite.make typ imgMap, po)
-  | ATile(tt) ->
-     let vel = match tt with
-       | Green | Yellow | White -> { fx = 0. ; fy = 0.; }
-       | Blue -> { fx = 1.; fy = 0.; }
-     in
-     let t_o = { (setup ()) with
-                 vel;
-                 pos;
-                 created_at;
-               } in
-     Tile(tt, Sprite.make typ imgMap, t_o)
-
-let rec make_all imgMap created_at ops: collidable list =
-  match ops with
-  | [] -> []
-  | h::t -> (make imgMap created_at h)::make_all imgMap created_at t
 
 let get_aabb collid =
   let spr = ((get_sprite collid).params) in
@@ -282,23 +253,25 @@ let update_debug_pt (co:collidable option) (player:collidable): collidable =
   | Some ct -> update ~debug_pt:(Some (get_aabb_center ct)) player
   | None -> player
 
-let update_player cw collids controls player =
+let update_player_collids state keys player collids : collidable * collidable list =
   let closest_collidable = find_closest_collidable player collids in
-  let player = update_player_keys player controls in
+  let player = update_player_keys player keys in
   let player = update_debug_pt closest_collidable player in
+  (*
   match closest_collidable with
-  | None -> move cw player
+  | None -> move state.vpt.dim.y player
   | Some closest_collidable -> 
      let po = get_obj player in
      let vel = { po.vel with fy = pl_jmp_vel } in
-     update ~vel player
+     update ~vel player*)
+  (player, collids)
 
-let update_collid cw collid =
+let update_collid state collid =
   match collid with
   | Player(_,_,_) as player -> failwith "Call update_player instead"
   | Tile(Blue,_,_) as tile ->
      (* Blue tiles bounce along x axis *)
-     move cw tile
+     move state.vpt.dim.y tile
   | Tile(Yellow,_,_) as tile ->
      (* Static but explode randomly *)
      Sprite.update_animation (get_sprite tile); tile;

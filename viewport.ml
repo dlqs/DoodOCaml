@@ -1,9 +1,5 @@
+open Types
 open Object
-   
-type viewport = {
-  pos: Object.xy;
-  dim: Object.xy;
-}
 
 let pl_y_offset_ratio = 0.35
 
@@ -13,18 +9,18 @@ let make (vx,vy) =
     dim = {x = vx; y = vy};
   }
 
-let in_view vpt collid :bool =
+let in_view (vpt:viewport) (collid:collidable) : bool =
   let obj_pos = (Object.get_obj collid).pos in
   not (obj_pos.x < vpt.pos.x || obj_pos.x > vpt.pos.x + vpt.dim.x
     || obj_pos.y < vpt.pos.y || obj_pos.y > vpt.pos.y + vpt.dim.y)
 
-let translate_debug_pt vpt debug_pt =
+let translate_debug_pt (vpt:viewport) (debug_pt:xy option) : xy option =
   match debug_pt with
   | None -> None
   | Some pt ->
     Some { pt with y = vpt.pos.y + vpt.dim.y - pt.y }
 
-let translate_coords vpt collid =
+let translate_coords (vpt:viewport) (collid:collidable) : collidable  =
   let obj_st = Object.get_obj collid in
   let obj_pos = obj_st.pos in
   let dy = snd (Object.get_sprite collid).params.frame_size in

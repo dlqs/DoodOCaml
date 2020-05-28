@@ -1,46 +1,28 @@
 open Js_of_ocaml
-open Actors
+open Types
 module StringMap = Map.Make(String)
 
-type pxy = int * int (* x, y *)
+let imgDir = "./sprites/"
+let imgSrcs = ["doodle.png";"tiles.png"]
+let imgMap_opt = ref None
 
-type imgMap_t = Dom_html.imageElement Js.t Map.Make(String).t
-
-type sprite_params =
-  {
-    max_frames: int;
-    max_ticks: int;
-    img_src: string;
-    frame_size: pxy;
-    src_offset: pxy;
-    bbox_offset: pxy;
-    bbox_size: pxy;
-    loop: bool;
-  }
-
-type sprite =
-  {
-    mutable params: sprite_params;
-    frame: int ref;
-    ticks: int ref;
-    img: Dom_html.imageElement Js.t;
-  }
-
-let imgdir = "./sprites/"
-let imgsrcs = ["doodle.png";"tiles.png"]
-
-(* Creates the HTML image elements first *)
-let setup ctx =
-  let rec setup_helper imgsrcs imgMap =
-    match imgsrcs with
-    | [] -> imgMap
-    | h::t ->
-      let imgsrc = imgdir ^ h in
-      let img = (Dom_html.createImg Dom_html.document) in
-      img##.src := (Js.string imgsrc);
-      setup_helper t (StringMap.add imgsrc img imgMap)
-  in
-  setup_helper imgsrcs StringMap.empty
+(* Helper to create sprite image elements only once then cache. *)
+let get_imgMap () =
+  match !imgMap_opt with
+  | Some imgMap -> imgMap
+  | None -> 
+     let rec helper srcs imgMap =
+       match srcs with
+       | [] -> imgMap
+       | h::t ->
+          let imgSrc = imgDir ^ h in
+          let img = (Dom_html.createImg Dom_html.document) in
+          img##.src := (Js.string imgSrc);
+          helper t (StringMap.add imgSrc img imgMap)
+     in
+     let imgMap = helper imgSrcs StringMap.empty in
+     imgMap_opt := Some imgMap;
+     imgMap
 
 (*setup_sprite is used to initialize a sprite.*)
 let setup_sprite ?loop:(loop=true) ?bb_off:(bbox_offset=(0,0)) ?bb_sz:(bbox_size=(0,0))
@@ -58,33 +40,9 @@ let setup_sprite ?loop:(loop=true) ?bb_off:(bbox_offset=(0,0)) ?bb_sz:(bbox_size
     loop;
   }
 
-(*Get sprite frame size of a actor type.*)
-let get_s_frame_size (typ: actor_typ) =
-  match typ with
-  | APlayer(plt) -> begin match plt with
-                      | Standing -> (30, 45)
-                      end
-  | ATile(tt) -> (40, 12)
-
-(*The following functions are used in order to define sprite animations
- *from their sprite sheets. Also creates bounding boxes if necessary.*)
-
-let make_tile (typ) =
-  let fs = get_s_frame_size (ATile(typ)) in
-  match typ with
-  | Green ->  setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 1 0 (40, 10) (0,0)
-  | Blue ->   setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 1 0 (40, 10) (0,10)
-  | Yellow -> setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 2 50 (40, 10) (0,20)
-  | White ->  setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 1 0 (40, 10) (0,30)
-
-(*Calls to set sprite for either big or small mario.*)
-let make_player plt = 
-  let fs = get_s_frame_size (APlayer(Standing)) in
-  match plt with
-  | Standing -> setup_sprite "doodle.png" 1 0 fs (0,0)
-
 (* Makes a sprite from provided [params]. *)
-let make_from_params params imgMap =
+let make_from_params params =
+  let imgMap = get_imgMap () in
   let img = StringMap.find params.img_src imgMap in
   {
     params;
@@ -93,18 +51,15 @@ let make_from_params params imgMap =
     img;
   }
 
-(*Make is the wrapper function to cycle through sprite animations*)
-let make actor imgMap =
-  let params = match actor with
-    | APlayer(plt) -> make_player plt
-    | ATile(tt) -> make_tile tt
+let make (typ: sprite_typ) : sprite =
+  let params = match typ with
+    | PStanding -> setup_sprite "doodle.png" 1 0 (30, 45) (0,0)
+    | TGreen ->    setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 1 0 (40, 10) (0,0)
+    | TBlue ->     setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 1 0 (40, 10) (0,10)
+    | TYellow ->   setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 2 50 (40, 10) (0,20)
+    | TWhite ->    setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 10) 1 0 (40, 10) (0,30)
   in
-  make_from_params params imgMap
-
-(* Make a background *)
-let make_bgd ctx imgMap =
-  let params = setup_sprite "bgd-1.png" 1 0 (512,256) (0,0) in
-  make_from_params params imgMap
+  make_from_params params
 
 (*update_animation is the main method to cycle through sprite animations*)
 let update_animation (spr: sprite) =

@@ -1,5 +1,7 @@
-val generate: Object.xy -> Object.xy -> Object.obj_prefab list
+open Types
+   
+val generate: state -> int -> int -> collidable list
 
-val generate_debug: Object.obj_prefab list
+val generate_debug: collidable list
 
 

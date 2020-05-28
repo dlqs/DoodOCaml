@@ -1,9 +1,4 @@
-open Object
-   
-type viewport = {
-  pos: Object.xy;     (* Absolute position of viewport relative to map *)
-  dim: Object.xy;   (* Dimensions of viewport *)
-}
+open Types
 
 (* Makes a new viewport of viewport dimensions and map dimensions*)
 val make : int*int -> viewport

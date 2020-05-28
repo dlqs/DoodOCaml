@@ -1,9 +1,10 @@
 open Js_of_ocaml
-open Sprite
+open Types
+
 let jstr = Js.string
 let fi = float_of_int
 
-let render_debug_pt context collid (debug_pt: Object.xy option) =
+let render_debug_pt context collid (debug_pt: xy option) =
   let center = Object.get_aabb_center collid in
   match debug_pt with
   | None -> ()
@@ -13,7 +14,7 @@ let render_debug_pt context collid (debug_pt: Object.xy option) =
                context##stroke;
                ()
                   
-let render ~draw_bb:(dbb:bool) canvas collids =
+let render state canvas collids =
   List.iter(fun collid ->
       let sprite = Object.get_sprite collid in
       let obj_st = Object.get_obj collid in
@@ -34,7 +35,7 @@ let render ~draw_bb:(dbb:bool) canvas collids =
                (fi dw)
                (fi dh)
         );
-      if dbb then
+      if state.draw_bb then
       let (bbox,bboy) = sprite.params.bbox_offset in
       let (bbsx,bbsy) = sprite.params.bbox_size in
       context##.strokeStyle := (Js.string "#FF0000");
