@@ -94,7 +94,8 @@ type state = {
   vpt: viewport;
   time: float;
   score: int;
-  generated_h: int;
+  next_generated_height: int;
+  last_generated_height: int;
   draw_bb: bool;
   game_over: bool;
 }

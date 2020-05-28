@@ -26,6 +26,13 @@ let setup () : obj_state =
     debug_pt = None;
   }
 
+(*Helper methods for getting sprites and objects from their collidables*)
+let get_sprite = function
+  | Player (_,s,_) | Tile(_,s,_) -> s
+
+let get_obj = function
+  | Player (_,_,o) | Tile(_,_,o) -> o
+
 let make_player (typ:pl_typ) (pos:xy) (created_at:float) : collidable =  
   match typ with
   | Standing -> 
@@ -54,7 +61,7 @@ let make_tile (typ:tile_typ) (pos:xy) (created_at:float) : collidable =
             } in
   Tile(typ, sprite, t_o)
 
-let update ?spr ?pos ?vel ?debug_pt (collid:collidable) =
+let update ?spr ?pos ?vel ?debug_pt ?killed (collid:collidable) =
   (* Helpers *)
   let may ~f x y =
     match y with
@@ -67,6 +74,7 @@ let update ?spr ?pos ?vel ?debug_pt (collid:collidable) =
   let set_vel o vel = { o with vel; } in
   let set_pos o pos = { o with pos; } in
   let set_debug_pt o debug_pt = { o with debug_pt; } in
+  let set_killed o killed = { o with killed; } in
   (* Actual *)
   match collid with
   | Player(plt, ps, po) ->
@@ -79,54 +87,13 @@ let update ?spr ?pos ?vel ?debug_pt (collid:collidable) =
      let t_o = may ~f:set_vel t_o vel in
      let t_o = may ~f:set_pos t_o pos in
      let t_o = may ~f:set_debug_pt t_o debug_pt in
+     let t_o = may ~f:set_killed t_o killed in
      let ts = may2 ts spr in
      Tile(tt, ts, t_o)
 
-(*Helper methods for getting sprites and objects from their collidables*)
-let get_sprite = function
-  | Player (_,s,_) | Tile(_,s,_) -> s
-
-let get_obj = function
-  | Player (_,_,o) | Tile(_,_,o) -> o
-
-let rec update_player_keys collid controls =
-  match controls with
-  | [] -> collid
-  | ctrl::t -> let vel = (get_obj collid).vel in
-               let fx = match ctrl with
-               | CLeft  -> max (vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0)
-               | CRight -> min (vel.fx +. pl_lat_vel) pl_max_lat_vel
-               in
-               update_player_keys (update ~vel:{ vel with fx=fx } collid) t
-
-(* Returns a moved collidable for its movement semantics *)
-let move cw collid =
-  let add_fxy_to_xy a b = { x = a.x + int_of_float b.fx;
-                            y = a.y + int_of_float b.fy; } in
-  (* Helper to wraparound position along the x-axis *)
-  let wraparound_x max_x pos = { pos with x = if pos.x < 0 then max_x - pos.x else
-                              if pos.x > max_x then max_x - pos.x else pos.x } in
-  (* Helper to bounce (i.e.flip) velocity along the x-axis, including width of obj*)
-  let bouncearound_x width max_x pos vel = { vel with fx =
-                 if (pos.x <= 0 && vel.fx < 0.) || (pos.x + width >= max_x && vel.fx > 0.)
-                 then vel.fx*.(-1.0) else vel.fx } in
-  match collid with
-  | Player(plt, ps, po) as player ->
-     (* Player will wraparound and is the only collidable subject to friction, gravity. *)
-     let pos = wraparound_x cw (add_fxy_to_xy po.pos po.vel) in
-     let vel = {
-         fy = po.vel.fy +. gravity;
-         fx = po.vel.fx *. friction_coef;
-       } in
-     update ~vel ~pos player
-  | Tile(Blue,ts,t_o) as tile -> 
-     let pos = add_fxy_to_xy t_o.pos t_o.vel in
-     let width = fst (get_sprite tile).params.bbox_size in
-     let vel = bouncearound_x width cw pos t_o.vel in
-     update ~vel ~pos tile
-  | _ -> failwith "Not implemented"
-
-
+let update_animation collid =
+  Sprite.update_animation (get_sprite collid); collid
+     
 let get_aabb collid =
   let spr = ((get_sprite collid).params) in
   let obj_st = get_obj collid in
@@ -205,6 +172,48 @@ let is_bbox_above c1 c2 =
 (* Returns the closer bbox c2/c3 to c1 *)
 let closer_bbox c1 c2 c3 =
   if (dist_collid c1 c2) < (dist_collid c1 c3) then c2 else c3
+let rec update_player_keys controls collid =
+  match controls with
+  | [] -> collid
+  | ctrl::t -> let vel = (get_obj collid).vel in
+               let fx = match ctrl with
+               | CLeft  -> max (vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0)
+               | CRight -> min (vel.fx +. pl_lat_vel) pl_max_lat_vel
+               in
+               update_player_keys t (update ~vel:{ vel with fx=fx } collid)
+          
+let update_debug_pt (co:collidable option) (player:collidable): collidable =
+  match co with
+  | Some ct -> update ~debug_pt:(Some (get_aabb_center ct)) player
+  | None -> player
+
+(* Returns a moved collidable, depending on its movement semantics *)
+let move state collid =
+  let add_fxy_to_xy a b = { x = a.x + int_of_float b.fx;
+                            y = a.y + int_of_float b.fy; } in
+  (* Helper to wraparound position along the x-axis *)
+  let wraparound_x max_x pos = { pos with x = if pos.x < 0 then max_x - pos.x else
+                              if pos.x > max_x then max_x - pos.x else pos.x } in
+  (* Helper to bounce (i.e.flip) velocity along the x-axis, including width of obj*)
+  let bouncearound_x width max_x pos vel = { vel with fx =
+                 if (pos.x <= 0 && vel.fx < 0.) || (pos.x + width >= max_x && vel.fx > 0.)
+                 then vel.fx*.(-1.0) else vel.fx } in
+  let vpt_width = state.vpt.dim.x in
+  match collid with
+  | Player(plt, ps, po) as player ->
+     (* Player will wraparound and is the only collidable subject to friction, gravity. *)
+     let pos = wraparound_x vpt_width (add_fxy_to_xy po.pos po.vel) in
+     let vel = {
+         fy = po.vel.fy +. gravity;
+         fx = po.vel.fx *. friction_coef;
+       } in
+     update ~vel ~pos player
+  | Tile(Blue,ts,t_o) as tile -> 
+     let pos = add_fxy_to_xy t_o.pos t_o.vel in
+     let width = fst (get_sprite tile).params.bbox_size in
+     let vel = bouncearound_x width vpt_width pos t_o.vel in
+     update ~vel ~pos tile
+  | _ -> failwith "Not implemented"
 
 (* One-body collision *)
 let do_collision c1 c2 =
@@ -247,36 +256,42 @@ let find_closest_collidable player collids =
        | _ -> failwith "not implemented"
   in
   helper None collids
-          
-let update_debug_pt (co:collidable option) (player:collidable): collidable =
-  match co with
-  | Some ct -> update ~debug_pt:(Some (get_aabb_center ct)) player
-  | None -> player
+
+let handle_collision player collid =
+  match collid with
+  | Player(_,_,_) -> failwith "Player cannot collid with itself" 
+  | Tile(tt,_,_) ->
+     let killed = match tt with
+       | White -> true
+       | _ -> false
+     in
+     let po = get_obj player in
+     let vel = { po.vel with fy = pl_jmp_vel } in
+     let player = update ~vel player in
+     let collid = update ~killed collid in
+     (player, collid)
 
 let update_player_collids state keys player collids : collidable * collidable list =
   let closest_collidable = find_closest_collidable player collids in
-  let player = update_player_keys player keys in
+  let player = update_player_keys keys player in
   let player = update_debug_pt closest_collidable player in
-  (*
   match closest_collidable with
-  | None -> move state.vpt.dim.y player
+  | None -> (player |> move state, collids)
   | Some closest_collidable -> 
-     let po = get_obj player in
-     let vel = { po.vel with fy = pl_jmp_vel } in
-     update ~vel player*)
-  (player, collids)
-
+     let (player, collided) = handle_collision player closest_collidable in
+     let collids = List.map (fun collid ->
+                     if (get_obj collid).id = (get_obj collided).id then collided else collid) collids in
+     (player, collids)
+      
+(* collid only (no collid-collid interactions) *)
 let update_collid state collid =
   match collid with
   | Player(_,_,_) as player -> failwith "Call update_player instead"
   | Tile(Blue,_,_) as tile ->
-     (* Blue tiles bounce along x axis *)
-     move state.vpt.dim.y tile
+     tile |> move state
   | Tile(Yellow,_,_) as tile ->
-     (* Static but explode randomly *)
-     Sprite.update_animation (get_sprite tile); tile;
+     tile |> update_animation
   | Tile(White,_,_) as tile ->
-     (* Static but explode on first touch *)
      tile
   | _ -> collid
 

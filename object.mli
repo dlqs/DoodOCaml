@@ -10,9 +10,10 @@ val get_sprite : collidable -> sprite
 
 val get_aabb_center : collidable -> xy
 
-val update : ?spr:sprite -> ?pos:xy -> ?vel:fxy -> ?debug_pt:xy option -> collidable -> collidable
+val update : ?spr:sprite -> ?pos:xy -> ?vel:fxy -> ?debug_pt:xy option -> ?killed:bool 
+             -> collidable -> collidable
 
-val move : int -> collidable -> collidable
+val move : state -> collidable -> collidable
 
 val update_player_collids : state -> controls list -> collidable -> collidable list -> collidable * collidable list
 
