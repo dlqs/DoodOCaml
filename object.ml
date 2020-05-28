@@ -1,9 +1,9 @@
 open Types
 
 (*Variables*)
-let gravity = -0.12 (* constant change in velocity along y axis only *)
+let gravity = -0.15 (* constant change in velocity along y axis only *)
 let friction_coef = 0.92  (* coefficient of velocity along x axis only *)
-let pl_jmp_vel = 6.
+let pl_jmp_vel = 7.0
 let pl_lat_vel = 2.
 let pl_max_lat_vel = 4.
 
@@ -191,9 +191,11 @@ let update_debug_pt (co:collidable option) (player:collidable): collidable =
 let move state collid =
   let add_fxy_to_xy a b = { x = a.x + int_of_float b.fx;
                             y = a.y + int_of_float b.fy; } in
-  (* Helper to wraparound position along the x-axis *)
-  let wraparound_x max_x pos = { pos with x = if pos.x < 0 then max_x - pos.x else
-                              if pos.x > max_x then max_x - pos.x else pos.x } in
+  (* Helper to wraparound position along the x-axis including width of obj *)
+  let wraparound_x width max_x pos = let midx = pos.x + width/2 in
+                              { pos with x =
+                              if midx < 0 then max_x - width else
+                              if midx > max_x then 0 else pos.x } in
   (* Helper to bounce (i.e.flip) velocity along the x-axis, including width of obj*)
   let bouncearound_x width max_x pos vel = { vel with fx =
                  if (pos.x <= 0 && vel.fx < 0.) || (pos.x + width >= max_x && vel.fx > 0.)
@@ -202,7 +204,8 @@ let move state collid =
   match collid with
   | Player(plt, ps, po) as player ->
      (* Player will wraparound and is the only collidable subject to friction, gravity. *)
-     let pos = wraparound_x vpt_width (add_fxy_to_xy po.pos po.vel) in
+     let player_width = fst ps.params.frame_size in
+     let pos = wraparound_x player_width vpt_width (add_fxy_to_xy po.pos po.vel) in
      let vel = {
          fy = po.vel.fy +. gravity;
          fx = po.vel.fx *. friction_coef;
