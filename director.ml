@@ -22,7 +22,7 @@ let translate_keys () =
 let generate_collids state collids =
   let new_collids =
     if state.next_generated_height > state.last_generated_height
-    then Pg.generate state (state.last_generated_height + 1) state.next_generated_height
+    then Pg.generate state
     else [] in
   collids@new_collids
 
@@ -74,7 +74,7 @@ let setup canvas =
     vpt;
     time = 0.;
     score = 0;
-    last_generated_height = ch;
+    last_generated_height = 0;
     next_generated_height = ch;
     draw_bb = false;
     game_over = false;
@@ -113,7 +113,7 @@ let start canvas =
   let cw = initial_state.vpt.dim.x and ch = initial_state.vpt.dim.y in
   let initial_player = Object.make_player Standing { x = cw/2; y = cw/8 } 0. in
   let initial_collids = if debug then Pg.generate_debug
-                        else Pg.generate initial_state 0 ch
+                        else Pg.generate initial_state 
   in
   game_loop 0. initial_state initial_player initial_collids
 
