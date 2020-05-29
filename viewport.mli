@@ -9,6 +9,6 @@ val above_vpt : viewport -> collidable -> bool
 
 val in_vpt : viewport -> collidable -> bool
 
-val prepare_for_draw : state -> collidable -> collidable
+val prepare_for_draw : viewport -> collidable -> collidable
 
 val move: viewport -> collidable -> viewport

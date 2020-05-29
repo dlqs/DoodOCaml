@@ -4,10 +4,10 @@ let blockY = 50
 let tile_width = 40
 let layer_height = 20
 
-let gp = 40
-let bp = 40
-let wp = 10
-let yp = 10
+let gp = 0
+let bp = 0
+let wp = 0
+let yp = 100
        
 
 let choose_tile_typ () =
@@ -54,9 +54,10 @@ let generate (state:state) : collidable list =
 
 let generate_debug =
   [
-    Object.make_tile Green { x = 0; y = 0; } 0.;
-    Object.make_tile Green { x = 216; y = 0; } 0.;
-    Object.make_tile Blue { x = 0; y = 10; } 0.;
-    Object.make_tile White { x = 40; y = 20; } 0.;
-    Object.make_tile Yellow { x = 80; y = 20; } 0.;
+    Object.make_tile Green { x = 40; y = 20; } 0.;
+    Object.make_tile Green { x = 120; y = 120; } 0.;
+    Object.make_tile Green { x = 160; y = 160; } 0.;
+    Object.make_tile Yellow { x = 0; y = 520; } 0.;
+    Object.make_tile Yellow { x = 0; y = 540; } 0.;
+    Object.make_tile Yellow { x = 0; y = 560; } 0.;
   ]

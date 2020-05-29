@@ -67,10 +67,12 @@ let update_score state =
   { state with score = state.vpt.pos.y }
 
 let move_from_pre_generated state collids pre_generated =
-  let collids = collids@(List.filter (Viewport.in_vpt state.vpt) pre_generated) in
+  let move_in = pre_generated |> List.filter (Viewport.in_vpt state.vpt)
+                              |> List.map (Object.update ~created_at:state.time)
+  in
   let pre_generated =
     List.filter (fun collid -> not (Viewport.in_vpt state.vpt collid)) pre_generated in
-  (collids, pre_generated)
+  (collids@move_in, pre_generated)
 
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
@@ -103,9 +105,9 @@ let start canvas =
 
       (*Draw*)
       canvas   |> Draw.clear_canvas;
-      collids  |> List.map (Viewport.prepare_for_draw state)
+      collids  |> List.map (Viewport.prepare_for_draw state.vpt)
                |> Draw.render state canvas;
-      [player] |> List.map (Viewport.prepare_for_draw state)
+      [player] |> List.map (Viewport.prepare_for_draw state.vpt)
                |> Draw.render state canvas;
       state    |> Draw.show_score canvas;
 
@@ -125,7 +127,7 @@ let start canvas =
               (Js.wrap_callback (fun (next_time:float) ->
                game_loop next_time state player collids pre_generated));)
     end in
-  let debug = false in
+  let debug = true in
   let initial_state = setup canvas in
   let cw = initial_state.vpt.dim.x and ch = initial_state.vpt.dim.y in
   let initial_player = Object.make_player Standing { x = cw/2; y = cw/8 } 0. in

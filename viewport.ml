@@ -26,15 +26,13 @@ let translate_debug_pt (vpt:viewport) (debug_pt:xy option) : xy option =
   | None -> None
   | Some pt -> Some { pt with y = vpt.pos.y + vpt.dim.y - pt.y }
 
-let prepare_for_draw (state:state) (collid:collidable) : collidable  =
-  let vpt = state.vpt in
+let prepare_for_draw (vpt:viewport) (collid:collidable) : collidable  =
   let obj = Object.get_obj collid in
   let frame_size_y = snd (Object.get_sprite collid).params.frame_size in
   let pos = { obj.pos with
               y = vpt.pos.y + vpt.dim.y - obj.pos.y - frame_size_y } in
   let debug_pt = translate_debug_pt vpt obj.debug_pt in
-  let created_at = state.time in
-  Object.update ~pos ~debug_pt ~created_at collid
+  Object.update ~pos ~debug_pt collid
 
 let move (vpt:viewport) (player:collidable) : viewport =
   let botY = (get_obj player).pos.y - (int_of_float (

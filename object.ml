@@ -295,8 +295,11 @@ let update_collid state collid =
   | Player(_,_,_) as player -> failwith "Call update_player instead"
   | Tile(Blue,_,_) as tile ->
      tile |> move state
-  | Tile(Yellow,_,_) as tile ->
-     tile |> update_animation
+  | Tile(Yellow,_,t_o) as tile ->
+     let explode_time = 8000. in
+     if state.time > t_o.created_at +. explode_time 
+     then tile |> update ~killed:true 
+     else tile |> update_animation
   | Tile(White,_,_) as tile ->
      tile
   | _ -> collid
