@@ -61,7 +61,7 @@ let make_tile (typ:tile_typ) (pos:xy) (created_at:float) : collidable =
             } in
   Tile(typ, sprite, t_o)
 
-let update ?spr ?pos ?vel ?debug_pt ?killed (collid:collidable) =
+let update ?spr ?pos ?vel ?debug_pt ?killed ?created_at (collid:collidable) =
   (* Helpers *)
   let may ~f x y =
     match y with
@@ -75,12 +75,14 @@ let update ?spr ?pos ?vel ?debug_pt ?killed (collid:collidable) =
   let set_pos o pos = { o with pos; } in
   let set_debug_pt o debug_pt = { o with debug_pt; } in
   let set_killed o killed = { o with killed; } in
+  let set_created_at o created_at = { o with created_at; } in
   (* Actual *)
   match collid with
   | Player(plt, ps, po) ->
      let po = may ~f:set_vel po vel in
      let po = may ~f:set_pos po pos in
      let po = may ~f:set_debug_pt po debug_pt in
+     let po = may ~f:set_created_at po created_at in
      let ps = may2 ps spr in
      Player(plt, ps, po)
   | Tile(tt, ts, t_o) -> 
@@ -88,6 +90,7 @@ let update ?spr ?pos ?vel ?debug_pt ?killed (collid:collidable) =
      let t_o = may ~f:set_pos t_o pos in
      let t_o = may ~f:set_debug_pt t_o debug_pt in
      let t_o = may ~f:set_killed t_o killed in
+     let t_o = may ~f:set_created_at t_o created_at in
      let ts = may2 ts spr in
      Tile(tt, ts, t_o)
 
