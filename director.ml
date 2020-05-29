@@ -63,6 +63,9 @@ let update_player_collids state player collids =
 let update_collids state collids =
   List.map (Object.update_collid state) collids
 
+let update_score state =
+  { state with score = state.vpt.pos.y }
+
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
   let cw = canvas##.width in
@@ -86,6 +89,7 @@ let start canvas =
                         |> update_draw_bb
                         |> update_viewport player
                         |> update_generated_height 
+                        |> update_score
       in
 
       (*Draw phase*)
@@ -94,6 +98,7 @@ let start canvas =
                |> Draw.render state canvas;
       [player] |> List.map (Viewport.translate_for_draw state.vpt)
                |> Draw.render state canvas;
+      state    |> Draw.show_score canvas;
 
       (*Update existing collidables *)
       let (player,collids) = update_player_collids state player collids in

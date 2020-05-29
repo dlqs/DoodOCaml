@@ -48,6 +48,13 @@ let render state canvas collids =
       ignore(render_debug_pt context collid obj_st.debug_pt);
     ) collids
 
+let show_score canvas state =
+  let score = string_of_int state.score in
+  let context = canvas##getContext (Dom_html._2d_) in
+  context##.font := (Js.string "15px Comic Sans MS");
+  context##.fillStyle := (Js.string "white");
+  ignore(context##fillText (Js.string score)  20.  20.)
+
 (*Used for animation updating. Canvas is cleared each frame and redrawn.*)
 let clear_canvas canvas =
   let context = canvas##getContext (Dom_html._2d_) in

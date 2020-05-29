@@ -4,10 +4,10 @@ let blockY = 50
 let tile_width = 40
 let layer_height = 20
 
-let gp = 60
+let gp = 40
 let bp = 40
-let wp = 0
-let yp = 0
+let wp = 10
+let yp = 10
        
 
 let choose_tile_typ () =
