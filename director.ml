@@ -19,12 +19,12 @@ let translate_keys () =
   List.fold_left (fun a x -> if fst x then (snd x)::a else a) [] ctrls
 
 (* Generates new collidables for next screen *)
-let generate_collids state collids =
+let generate_collids state pre_generated =
   let new_collids =
     if state.next_generated_height > state.last_generated_height
     then Pg.generate state
     else [] in
-  collids@new_collids
+  pre_generated@new_collids
 
 (* Returns collidables without removed ones *)
 let remove_collids state collids =
@@ -66,6 +66,12 @@ let update_collids state collids =
 let update_score state =
   { state with score = state.vpt.pos.y }
 
+let move_from_pre_generated state collids pre_generated =
+  let collids = collids@(List.filter (Viewport.in_vpt state.vpt) pre_generated) in
+  let pre_generated =
+    List.filter (fun collid -> not (Viewport.in_vpt state.vpt collid)) pre_generated in
+  (collids, pre_generated)
+
 let setup canvas =
   let ctx = canvas##getContext (Dom_html._2d_) in
   let cw = canvas##.width in
@@ -84,7 +90,7 @@ let setup canvas =
   }
 
 let start canvas =
-  let rec game_loop time state player collids = begin
+  let rec game_loop time state player collids pre_generated = begin
       let state = state |> update_time time
                         |> update_draw_bb
                         |> update_viewport player
@@ -92,7 +98,10 @@ let start canvas =
                         |> update_score
       in
 
-      (*Draw phase*)
+      (* Import in-view collids *)
+      let (collids, pre_generated) = move_from_pre_generated state collids pre_generated in
+
+      (*Draw*)
       canvas   |> Draw.clear_canvas;
       collids  |> List.map (Viewport.translate_for_draw state.vpt)
                |> Draw.render state canvas;
@@ -100,18 +109,21 @@ let start canvas =
                |> Draw.render state canvas;
       state    |> Draw.show_score canvas;
 
-      (*Update existing collidables *)
-      let (player,collids) = update_player_collids state player collids in
-      let collids = update_collids state collids in
-
-      (* Generate new collidables, remove old collidables *)
-      let collids = collids |> generate_collids state
+      (*Update existing collidables*)
+      let (player,collids) = collids |> List.filter (Viewport.in_vpt state.vpt)
+                                     |> update_player_collids state player
+      in
+      let collids = collids |> update_collids state 
                             |> remove_collids state
       in
+
+      (* generate new collidables, but these will not be in-view yet*)
+      let pre_generated = pre_generated |> generate_collids state in
+
       (* Prepare next phase *)
       ignore (Dom_html.window##requestAnimationFrame 
               (Js.wrap_callback (fun (next_time:float) ->
-               game_loop next_time state player collids));)
+               game_loop next_time state player collids pre_generated));)
     end in
   let debug = false in
   let initial_state = setup canvas in
@@ -120,7 +132,7 @@ let start canvas =
   let initial_collids = if debug then Pg.generate_debug
                         else Pg.generate initial_state 
   in
-  game_loop 0. initial_state initial_player initial_collids
+  game_loop 0. initial_state initial_player initial_collids []
 
 (* Keydown event handler translates a key press *)
 let keydown evt =
