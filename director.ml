@@ -103,9 +103,9 @@ let start canvas =
 
       (*Draw*)
       canvas   |> Draw.clear_canvas;
-      collids  |> List.map (Viewport.translate_for_draw state.vpt)
+      collids  |> List.map (Viewport.prepare_for_draw state)
                |> Draw.render state canvas;
-      [player] |> List.map (Viewport.translate_for_draw state.vpt)
+      [player] |> List.map (Viewport.prepare_for_draw state)
                |> Draw.render state canvas;
       state    |> Draw.show_score canvas;
 
