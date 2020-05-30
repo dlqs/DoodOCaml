@@ -42,6 +42,13 @@ let make_player (typ:pl_typ) (pos:xy) (created_at:float) : collidable =
                 created_at;
               } in
      Player(Standing, Sprite.make PStanding, po)
+  | Rocketing ->
+     let po = { (setup ()) with
+                vel = { fx = 0.; fy = pl_jmp_vel };
+                pos;
+                created_at;
+              } in
+     Player(Rocketing, Sprite.make PRocket, po)
 
 let make_tile (typ:tile_typ) (pos:xy) (created_at:float) : collidable =  
   let sprite = match typ with
@@ -208,12 +215,20 @@ let move state collid =
                  then vel.fx*.(-1.0) else vel.fx } in
   let vpt_width = state.vpt.dim.x in
   match collid with
-  | Player(plt, ps, po) as player ->
+  | Player(Standing, ps, po) as player ->
      (* Player will wraparound and is the only collidable subject to friction, gravity. *)
      let player_width = fst ps.params.frame_size in
      let pos = wraparound_x player_width vpt_width (add_fxy_to_xy po.pos po.vel) in
      let vel = {
          fy = po.vel.fy +. gravity;
+         fx = po.vel.fx *. friction_coef;
+       } in
+     update ~vel ~pos player
+  | Player(Rocketing, ps, po) as player ->
+     let player_width = fst ps.params.frame_size in
+     let pos = wraparound_x player_width vpt_width (add_fxy_to_xy po.pos po.vel) in
+     let vel = {
+         fy = po.vel.fy;
          fx = po.vel.fx *. friction_coef;
        } in
      update ~vel ~pos player
@@ -283,8 +298,10 @@ let handle_collision player collid =
 
 let update_player_collids state keys player collids : collidable * collidable list =
   let closest_collidable = find_closest_collidable player collids in
-  let player = update_player_keys keys player in
-  let player = update_debug_pt closest_collidable player in
+  let player = player |> update_player_keys keys
+                      |> update_debug_pt closest_collidable
+                      |> update_animation
+  in
   match closest_collidable with
   | None -> (player |> move state, collids)
   | Some closest_collidable -> 

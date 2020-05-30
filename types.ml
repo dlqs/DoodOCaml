@@ -23,6 +23,7 @@ type controls =
 
 type pl_typ =
   | Standing
+  | Rocketing
 
 type tile_typ =
   | Green
@@ -32,6 +33,7 @@ type tile_typ =
 
 type sprite_typ =
   | PStanding
+  | PRocket
   | TGreen
   | TBlue
   | TYellow
