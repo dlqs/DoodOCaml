@@ -54,7 +54,8 @@ let make_from_params params =
 let make (typ: sprite_typ) : sprite =
   let params = match typ with
     | PStanding -> setup_sprite "doodle.png" 1 (ref 0) (30, 45) (0,0)
-    | PRocket ->   setup_sprite "doodle.png" 2 (ref 10) (30, 60) (0,45)
+    | PRocketing ->   setup_sprite "doodle.png" 2 (ref 10) (30, 60) (0,45)
+    | IRocket ->   setup_sprite "items.png" 1 (ref 0) (20, 30) (0,0)
     | TGreen ->    setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 (ref 0) (40, 10) (0,0)
     | TBlue ->     setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 (ref 0) (40, 10) (0,10)
     | TYellow ->   setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 2 (ref 80) (40, 10) (0,20)

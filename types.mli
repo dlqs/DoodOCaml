@@ -31,9 +31,13 @@ type tile_typ =
   | Yellow
   | White
 
+type item_typ = 
+  | Rocket
+
 type sprite_typ =
   | PStanding
-  | PRocket
+  | PRocketing
+  | IRocket
   | TGreen
   | TBlue
   | TYellow
@@ -72,8 +76,7 @@ type obj_state = {
 type collidable =
   | Player of pl_typ * sprite * obj_state
   | Tile of tile_typ * sprite * obj_state
-
-
+  | Item of item_typ * sprite * obj_state
 
 (* Represents the values of relevant key bindings. *)
 type keys = {

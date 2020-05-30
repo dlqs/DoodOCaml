@@ -10,7 +10,8 @@ val get_sprite : collidable -> sprite
 
 val get_aabb_center : collidable -> xy
 
-val update : ?spr:sprite -> ?pos:xy -> ?vel:fxy -> ?debug_pt:xy option -> ?killed:bool -> ?created_at:float
+val update : ?plt:pl_typ -> ?it:item_typ -> ?tt:tile_typ ->
+             ?spr:sprite -> ?pos:xy -> ?vel:fxy -> ?debug_pt:xy option -> ?killed:bool -> ?created_at:float
              -> collidable -> collidable
 
 val move : state -> collidable -> collidable

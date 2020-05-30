@@ -28,10 +28,10 @@ let setup () : obj_state =
 
 (*Helper methods for getting sprites and objects from their collidables*)
 let get_sprite = function
-  | Player (_,s,_) | Tile(_,s,_) -> s
+  | Player (_,s,_) | Tile(_,s,_) | Item(_,s,_) -> s
 
 let get_obj = function
-  | Player (_,_,o) | Tile(_,_,o) -> o
+  | Player (_,_,o) | Tile(_,_,o) | Item(_,_,o) -> o
 
 let make_player (typ:pl_typ) (pos:xy) (created_at:float) : collidable =  
   match typ with
@@ -48,7 +48,7 @@ let make_player (typ:pl_typ) (pos:xy) (created_at:float) : collidable =
                 pos;
                 created_at;
               } in
-     Player(Rocketing, Sprite.make PRocket, po)
+     Player(Rocketing, Sprite.make PRocketing, po)
 
 let make_tile (typ:tile_typ) (pos:xy) (created_at:float) : collidable =  
   let sprite = match typ with
@@ -68,7 +68,18 @@ let make_tile (typ:tile_typ) (pos:xy) (created_at:float) : collidable =
             } in
   Tile(typ, sprite, t_o)
 
-let update ?spr ?pos ?vel ?debug_pt ?killed ?created_at (collid:collidable) =
+let make_item (typ:item_typ) (pos:xy) (created_at:float) : collidable =
+  let sprite = match typ with
+    | Rocket -> Sprite.make IRocket
+  in
+  let io = { (setup ()) with
+             pos;
+             created_at;
+           } in
+  Item(typ, sprite, io)
+
+let update ?plt:p_t ?it:i_t ?tt:t_t
+      ?spr ?pos ?vel ?debug_pt ?killed ?created_at (collid:collidable) =
   (* Helpers *)
   let may ~f x y =
     match y with
@@ -91,15 +102,26 @@ let update ?spr ?pos ?vel ?debug_pt ?killed ?created_at (collid:collidable) =
      let po = may ~f:set_debug_pt po debug_pt in
      let po = may ~f:set_created_at po created_at in
      let ps = may2 ps spr in
+     let plt = may2 plt p_t in
      Player(plt, ps, po)
-  | Tile(tt, ts, t_o) -> 
+  | Tile(tt,ts,t_o) ->
      let t_o = may ~f:set_vel t_o vel in
      let t_o = may ~f:set_pos t_o pos in
      let t_o = may ~f:set_debug_pt t_o debug_pt in
      let t_o = may ~f:set_killed t_o killed in
      let t_o = may ~f:set_created_at t_o created_at in
      let ts = may2 ts spr in
+     let tt = may2 tt t_t in
      Tile(tt, ts, t_o)
+  | Item(it, is, io) ->
+     let io = may ~f:set_vel io vel in
+     let io = may ~f:set_pos io pos in
+     let io = may ~f:set_debug_pt io debug_pt in
+     let io = may ~f:set_killed io killed in
+     let io = may ~f:set_created_at io created_at in
+     let is = may2 is spr in
+     let it = may2 it i_t in
+     Item(it, is, io)
 
 let update_animation collid =
   Sprite.update_animation (get_sprite collid); collid
@@ -295,6 +317,13 @@ let handle_collision player collid =
      let player = update ~vel player in
      let collid = update ~killed collid in
      (player, collid)
+  | Item(it,_,_) ->
+     match it with
+     | Rocket ->
+        let player = update ~plt:Rocketing player in
+        let collid = update ~killed:true collid in
+        (player, collid)
+
 
 let update_player_collids state keys player collids : collidable * collidable list =
   let closest_collidable = find_closest_collidable player collids in
