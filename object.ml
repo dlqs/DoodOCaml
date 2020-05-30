@@ -71,6 +71,7 @@ let make_tile (typ:tile_typ) (pos:xy) (created_at:float) : collidable =
 let make_item (typ:item_typ) (pos:xy) (created_at:float) : collidable =
   let sprite = match typ with
     | Rocket -> Sprite.make IRocket
+    | Spring -> Sprite.make ISpring
   in
   let io = { (setup ()) with
              pos;
@@ -293,9 +294,14 @@ let find_closest_collidable player collids =
                | Tile(_,_,_) as tile ->
                   if ((is_bbox_above player tile) && (will_collide player tile))
                   then Some tile else None
-               | Item(_,_,_) as item ->
-                  if (will_collide player item)
-                  then Some item else None
+               | Item(it,_,_) as item ->
+                  begin match it with
+                  | Rocket ->
+                     if (will_collide player item) then Some item else None
+                  | Spring -> 
+                     if ((is_bbox_above player item) && (will_collide player item))
+                     then Some item else None
+                  end
                | _ -> None
        in
        match current_closest with
@@ -312,6 +318,7 @@ let find_closest_collidable player collids =
 
   
 let handle_collision state player collid =
+  let po = get_obj player in
   match collid with
   | Player(_,_,_) -> failwith "Player cannot collid with itself" 
   | Tile(tt,_,_) ->
@@ -319,7 +326,6 @@ let handle_collision state player collid =
        | White -> true
        | _ -> false
      in
-     let po = get_obj player in
      let vel = { po.vel with fy = pl_jmp_vel } in
      let player = update ~vel player in
      let collid = update ~killed collid in
@@ -327,9 +333,12 @@ let handle_collision state player collid =
   | Item(it,_,_) ->
      match it with
      | Rocket ->
-        let obj_st = get_obj player in
-        let player = make_player Rocketing obj_st.pos state.time in
-        let collid = update ~killed:true  collid in
+        let player = make_player Rocketing po.pos state.time in
+        let collid = update ~killed:true collid in
+        (player, collid)
+     | Spring ->
+        let vel = { po.vel with fy = 2.*.pl_jmp_vel } in
+        let player = update ~vel player in
         (player, collid)
 
 let update_player_typ state player =
