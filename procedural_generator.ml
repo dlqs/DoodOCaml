@@ -3,54 +3,67 @@ open Types
 let blockY = 50
 let tile_width = 40
 let layer_height = 20
-
-let gp = 0
-let bp = 0
-let wp = 0
-let yp = 100
        
+(* tile probabilities *)
+type tile_prob = {g:int; b:int; w:int; y:int}
 
-let choose_tile_typ () =
+let get_tile_prob ?g:(g=0) ?b:(b=0) ?w:(w=0) ?y:(y=0) () =
+  assert (g+b+w+y = 100);
+  { g;b;w;y }
+
+let choose_tile_typ (tp:tile_prob) : tile_typ =
   let tile_prob = 1 + Random.int 100 in
+  let gc = tp.g in
+  let bc = gc + tp.b in
+  let wc = bc + tp.w in
+  let yc = wc + tp.y in
   match tile_prob with
-  | prob when prob <= gp -> Green
-  | prob when prob <= gp+bp -> Blue
-  | prob when prob <= gp+bp+wp -> White
-  | prob when prob <= gp+bp+wp+yp -> Yellow
+  | prob when prob <= gc -> Green
+  | prob when prob <= bc -> Blue
+  | prob when prob <= wc -> White
+  | prob when prob <= yc -> Yellow
   | _ -> failwith "does not add up to 100!"
 
-let generate_tile pos created_at =
-  let tt = choose_tile_typ () in
+let generate_tile pos created_at tile_probs =
+  let tt = choose_tile_typ tile_probs in
   Object.make_tile tt pos created_at
 
-let generate_layer state tile_prob y =
+let generate_layer state tile_prob y tile_probs =
   let p = Random.float 1.0 in
   let q = int_of_float (100.0 *. p) in
   if q <= tile_prob then
     let x = int_of_float (p *. float_of_int (state.vpt.dim.x - tile_width)) in
-    [generate_tile { x; y; } state.time]
+    [generate_tile { x; y; } state.time tile_probs]
   else 
     []
 
-let generate_block state startY endY =
+let generate_block state startY endY tile_probs =
   let rec helper startY endY generated_tiles =
     if startY + layer_height >= endY then generated_tiles else
-    let layer = generate_layer state 20 startY in
+    let layer = generate_layer state 20 startY tile_probs in
     helper (startY+layer_height) endY generated_tiles@layer
   in
-  let first_layer = generate_layer state 100 startY in
+  let first_layer = generate_layer state 100 startY tile_probs in
   let rest_layers = helper (startY+layer_height) endY [] in
   first_layer@rest_layers
   
-let rec generate_green_blue_tiles state startY endY generated_tiles =
+let rec generate_green_blue_tiles state startY endY tile_probs generated_tiles =
   if startY + blockY >= endY then generated_tiles else
-  let block = generate_block state startY (startY+blockY) in
-  generate_green_blue_tiles state (startY+blockY) endY generated_tiles@block
+  let block = generate_block state startY (startY+blockY) tile_probs in
+  generate_green_blue_tiles state (startY+blockY) endY tile_probs generated_tiles@block
 
 let generate (state:state) : collidable list =
   let startY = state.last_generated_height + 1 in
   let endY = state.next_generated_height in
-  generate_green_blue_tiles state startY endY []
+  if endY < 1025 then
+    let tp = (get_tile_prob ~g:90 ~b:10 ()) in
+    generate_green_blue_tiles state startY endY tp []
+  else if endY < 2049 then
+    let tp = (get_tile_prob ~g:80 ~b:20 ()) in
+    generate_green_blue_tiles state startY endY tp []
+  else 
+    let tp = (get_tile_prob ~g:25 ~b:25 ~w:25 ~y:25 ()) in
+    generate_green_blue_tiles state startY endY tp []
 
 let generate_debug =
   [

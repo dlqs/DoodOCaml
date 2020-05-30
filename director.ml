@@ -55,8 +55,8 @@ let update_generated_height state =
     then state.next_generated_height
     else state.last_generated_height in
   let next_generated_height =
-    if state.vpt.pos.y + state.vpt.dim.y >= state.next_generated_height
-    then state.next_generated_height + state.vpt.dim.y
+    if state.vpt.pos.y + 2*state.vpt.dim.y >= state.next_generated_height
+    then state.next_generated_height + 2*state.vpt.dim.y
     else state.next_generated_height in
   { state with last_generated_height; next_generated_height; }
 
@@ -77,11 +77,11 @@ let update_score state =
   { state with score = state.vpt.pos.y }
 
 let move_from_pre_generated state collids pre_generated =
-  let move_in = pre_generated |> List.filter (Viewport.in_vpt state.vpt)
+  let move_in = pre_generated |> List.filter (fun c -> not (Viewport.above_vpt state.vpt c))
                               |> List.map (Object.update ~created_at:state.time)
   in
-  let pre_generated =
-    List.filter (fun collid -> not (Viewport.in_vpt state.vpt collid)) pre_generated in
+  let pre_generated = pre_generated |> List.filter (Viewport.above_vpt state.vpt)
+  in
   (collids@move_in, pre_generated)
 
 let setup canvas =
@@ -96,7 +96,7 @@ let setup canvas =
     time = 0.;
     score = 0;
     last_generated_height = 0;
-    next_generated_height = ch;
+    next_generated_height = 2*ch;
     draw_bb = false;
     game_over = false;
   }
@@ -137,14 +137,14 @@ let start canvas =
               (Js.wrap_callback (fun (next_time:float) ->
                game_loop next_time state player collids pre_generated));)
     end in
-  let debug = true in
+  let debug = false in
   let initial_state = setup canvas in
   let cw = initial_state.vpt.dim.x and ch = initial_state.vpt.dim.y in
   let initial_player = Object.make_player Standing { x = cw/2; y = cw/8 } 0. in
   let initial_collids = if debug then Pg.generate_debug
                         else Pg.generate initial_state 
   in
-  game_loop 0. initial_state initial_player initial_collids []
+  game_loop 0. initial_state initial_player [] initial_collids
 
 (* Keydown event handler translates a key press *)
 let keydown evt =
