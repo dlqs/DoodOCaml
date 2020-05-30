@@ -42,7 +42,7 @@ type imgMap_t = Dom_html.imageElement Js.t Map.Make(String).t
 type pxy = int * int (* x, y *)
 type sprite_params = {
     max_frames: int;
-    max_ticks: int;
+    max_ticks: int ref;
     img_src: string;
     frame_size: pxy;
     src_offset: pxy;

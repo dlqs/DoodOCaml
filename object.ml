@@ -97,6 +97,9 @@ let update ?spr ?pos ?vel ?debug_pt ?killed ?created_at (collid:collidable) =
 let update_animation collid =
   Sprite.update_animation (get_sprite collid); collid
      
+let update_max_ticks coeff collid =
+  Sprite.update_max_ticks (get_sprite collid) coeff ; collid
+  
 let get_aabb collid =
   let spr = ((get_sprite collid).params) in
   let obj_st = get_obj collid in
@@ -263,6 +266,7 @@ let find_closest_collidable player collids =
   in
   helper None collids
 
+  
 let handle_collision player collid =
   match collid with
   | Player(_,_,_) -> failwith "Player cannot collid with itself" 
@@ -298,9 +302,14 @@ let update_collid state collid =
   | Tile(Yellow,_,t_o) as tile ->
      let explode_time = 8000. in
      if state.time > t_o.created_at +. explode_time 
-     then tile |> update ~killed:true 
-     else tile |> update_animation
+       then tile |> update ~killed:true else
+       tile |> update_animation
   | Tile(White,_,_) as tile ->
      tile
   | _ -> collid
 
+let update_collid_second state collid =
+  match collid with
+  | Tile(Yellow,_,t_o) as tile ->
+       tile |> (update_max_ticks 0.80)
+  | _ -> collid

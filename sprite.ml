@@ -53,11 +53,11 @@ let make_from_params params =
 
 let make (typ: sprite_typ) : sprite =
   let params = match typ with
-    | PStanding -> setup_sprite "doodle.png" 1 0 (30, 45) (0,0)
-    | TGreen ->    setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 0 (40, 10) (0,0)
-    | TBlue ->     setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 0 (40, 10) (0,10)
-    | TYellow ->   setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 2 50 (40, 10) (0,20)
-    | TWhite ->    setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 0 (40, 10) (0,30)
+    | PStanding -> setup_sprite "doodle.png" 1 (ref 0) (30, 45) (0,0)
+    | TGreen ->    setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 (ref 0) (40, 10) (0,0)
+    | TBlue ->     setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 (ref 0) (40, 10) (0,10)
+    | TYellow ->   setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 2 (ref 80) (40, 10) (0,20)
+    | TWhite ->    setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 (ref 0) (40, 10) (0,30)
   in
   make_from_params params
 
@@ -65,11 +65,14 @@ let make (typ: sprite_typ) : sprite =
 let update_animation (spr: sprite) =
   (* Only advance frame when ticked *)
   let curr_ticks = !(spr.ticks) in
-  if curr_ticks >= spr.params.max_ticks then begin
+  let max_ticks = !(spr.params.max_ticks) in
+  if curr_ticks >= max_ticks then begin
     spr.ticks := 0;
     if spr.params.loop then
     spr.frame := (!(spr.frame) + 1) mod spr.params.max_frames
   end else spr.ticks := curr_ticks + 1
 
+let update_max_ticks (spr:sprite) (coeff:float) =
+  spr.params.max_ticks := int_of_float (coeff *. float_of_int !(spr.params.max_ticks))
   
 

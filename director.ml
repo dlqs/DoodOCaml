@@ -11,12 +11,18 @@ let pressed_keys = {
   bbox = false;
 }
 
+
 (* Converts a keypress to a list of control keys, allowing more than one key
  * to be processed each frame. *)
 let translate_keys () =
   let k = pressed_keys in
   let ctrls = [(k.left,CLeft);(k.right,CRight);] in
   List.fold_left (fun a x -> if fst x then (snd x)::a else a) [] ctrls
+
+let second_time = ref 0.
+let check_second time = 
+  if time >= !second_time +. 1000. then
+  (second_time := time; true ) else false
 
 (* Generates new collidables for next screen *)
 let generate_collids state pre_generated =
@@ -61,7 +67,11 @@ let update_player_collids state player collids =
 
 (* Handles collids only (there are no collid-collid collisions) *)
 let update_collids state collids =
-  List.map (Object.update_collid state) collids
+  if check_second state.time then
+    collids |> List.map (Object.update_collid state)
+            |> List.map(Object.update_collid_second state) 
+  else
+    List.map (Object.update_collid state) collids
 
 let update_score state =
   { state with score = state.vpt.pos.y }
@@ -127,7 +137,7 @@ let start canvas =
               (Js.wrap_callback (fun (next_time:float) ->
                game_loop next_time state player collids pre_generated));)
     end in
-  let debug = true in
+  let debug = false in
   let initial_state = setup canvas in
   let cw = initial_state.vpt.dim.x and ch = initial_state.vpt.dim.y in
   let initial_player = Object.make_player Standing { x = cw/2; y = cw/8 } 0. in
