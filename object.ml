@@ -72,6 +72,7 @@ let make_item (typ:item_typ) (pos:xy) (created_at:float) : collidable =
   let sprite = match typ with
     | Rocket -> Sprite.make IRocket
     | Spring -> Sprite.make ISpring
+    | Monster -> Sprite.make IMonster
   in
   let io = { (setup ()) with
              pos;
@@ -296,7 +297,7 @@ let find_closest_collidable player collids =
                   then Some tile else None
                | Item(it,_,_) as item ->
                   begin match it with
-                  | Rocket ->
+                  | Rocket | Monster ->
                      if (will_collide player item) then Some item else None
                   | Spring -> 
                      if ((is_bbox_above player item) && (will_collide player item))
@@ -340,6 +341,14 @@ let handle_collision state player collid =
         let vel = { po.vel with fy = 2.*.pl_jmp_vel } in
         let player = update ~vel player in
         (player, collid)
+     | Monster ->
+        if (is_bbox_above player collid)
+        then
+          let collid = update ~killed:true collid in
+          (player, collid)
+        else 
+          let player = update ~killed:true player in
+          (player, collid)
 
 let update_player_typ state player =
   match player with

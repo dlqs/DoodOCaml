@@ -58,5 +58,5 @@ let generate_debug =
     Object.make_tile Green { x = 120; y = 120; } 0.;
     Object.make_tile Green { x = 160; y = 160; } 0.;
     Object.make_tile Green { x = 160; y = 160; } 0.;
-    Object.make_item Spring { x = 160; y = 170; } 0.;
+    Object.make_item Monster { x = 160; y = 170; } 0.;
   ]

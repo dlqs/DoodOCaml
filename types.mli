@@ -34,12 +34,14 @@ type tile_typ =
 type item_typ = 
   | Rocket
   | Spring
+  | Monster
 
 type sprite_typ =
   | PStanding
   | PRocketing
   | IRocket
   | ISpring
+  | IMonster
   | TGreen
   | TBlue
   | TYellow
