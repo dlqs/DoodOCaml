@@ -311,7 +311,7 @@ let find_closest_collidable player collids =
   helper None collids
 
   
-let handle_collision player collid =
+let handle_collision state player collid =
   match collid with
   | Player(_,_,_) -> failwith "Player cannot collid with itself" 
   | Tile(tt,_,_) ->
@@ -327,21 +327,29 @@ let handle_collision player collid =
   | Item(it,_,_) ->
      match it with
      | Rocket ->
-        let player = update ~plt:Rocketing player in
-        let collid = update ~killed:true collid in
+        let obj_st = get_obj player in
+        let player = make_player Rocketing obj_st.pos state.time in
+        let collid = update ~killed:true  collid in
         (player, collid)
 
-
+let update_player_typ state player =
+  match player with
+  | Player(Rocketing, ps, po) ->
+     if state.time >= po.created_at +. 5000.
+     then make_player Standing po.pos state.time
+     else player
+  | _ -> player
 let update_player_collids state keys player collids : collidable * collidable list =
   let closest_collidable = find_closest_collidable player collids in
   let player = player |> update_player_keys keys
                       |> update_debug_pt closest_collidable
                       |> update_animation
+                      |> update_player_typ state
   in
   match closest_collidable with
   | None -> (player |> move state, collids)
   | Some closest_collidable -> 
-     let (player, collided) = handle_collision player closest_collidable in
+     let (player, collided) = handle_collision state player closest_collidable in
      let collids = List.map (fun collid ->
                      if (get_obj collid).id = (get_obj collided).id then collided else collid) collids in
      (player, collids)
