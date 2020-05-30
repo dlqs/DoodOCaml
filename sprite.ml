@@ -3,7 +3,7 @@ open Types
 module StringMap = Map.Make(String)
 
 let imgDir = "./sprites/"
-let imgSrcs = ["doodle.png";"tiles.png"]
+let imgSrcs = ["doodle.png";"tiles.png";"items.png"]
 let imgMap_opt = ref None
 
 (* Helper to create sprite image elements only once then cache. *)

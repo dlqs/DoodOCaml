@@ -57,4 +57,6 @@ let generate_debug =
     Object.make_tile Green { x = 40; y = 20; } 0.;
     Object.make_tile Green { x = 120; y = 120; } 0.;
     Object.make_tile Green { x = 160; y = 160; } 0.;
+    Object.make_tile Green { x = 160; y = 160; } 0.;
+    Object.make_item Rocket { x = 160; y = 180; } 0.;
   ]

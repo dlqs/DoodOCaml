@@ -236,6 +236,7 @@ let move state collid =
                  if (pos.x <= 0 && vel.fx < 0.) || (pos.x + width >= max_x && vel.fx > 0.)
                  then vel.fx*.(-1.0) else vel.fx } in
   let vpt_width = state.vpt.dim.x in
+  (* actual *)
   match collid with
   | Player(Standing, ps, po) as player ->
      (* Player will wraparound and is the only collidable subject to friction, gravity. *)
@@ -288,18 +289,24 @@ let find_closest_collidable player collids =
     match collids with
     | [] -> current_closest
     | h::t ->
-       match h with
-       | Tile(_,_,_) as tile ->
-          begin
-            if not (is_bbox_above player tile) then helper current_closest t else
-            if not (will_collide player tile) then helper current_closest t else
-            match current_closest with
-            | None -> helper (Some h) t
-            | Some i ->
-               let closer = closer_bbox player i h in
-               helper (Some closer) t
-          end
-       | _ -> failwith "not implemented"
+       let j = match h with
+               | Tile(_,_,_) as tile ->
+                  if ((is_bbox_above player tile) && (will_collide player tile))
+                  then Some tile else None
+               | Item(_,_,_) as item ->
+                  if (will_collide player item)
+                  then Some item else None
+               | _ -> None
+       in
+       match current_closest with
+       | None -> begin match j with
+                 | None -> helper None t
+                 | Some j -> helper (Some j) t end
+       | Some i -> begin match j with
+                   | None -> helper (Some i) t
+                   | Some j ->
+                      let closer = closer_bbox player i h in
+                      helper (Some closer) t end
   in
   helper None collids
 

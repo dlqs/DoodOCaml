@@ -4,6 +4,8 @@ val make_player : pl_typ -> xy -> float -> collidable
 
 val make_tile : tile_typ -> xy -> float -> collidable
 
+val make_item : item_typ -> xy -> float -> collidable
+
 val get_obj : collidable -> obj_state
 
 val get_sprite : collidable -> sprite
