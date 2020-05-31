@@ -7,3 +7,5 @@
 (env
   (dev (
     flags (:standard -w -27 -w -32 -w -26))))
+
+(dirs :standard  \ js)

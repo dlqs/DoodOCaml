@@ -137,7 +137,7 @@ let start canvas =
               (Js.wrap_callback (fun (next_time:float) ->
                game_loop next_time state player collids pre_generated));)
     end in
-  let debug = false in
+  let debug = true in
   let initial_state = setup canvas in
   let cw = initial_state.vpt.dim.x and ch = initial_state.vpt.dim.y in
   let initial_player = Object.make_player Standing { x = cw/2; y = cw/8 } 0. in
