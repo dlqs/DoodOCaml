@@ -3,7 +3,7 @@ open Types
 module StringMap = Map.Make(String)
 
 let imgDir = "./sprites/"
-let imgSrcs = ["doodle.png";"tiles.png";"items.png"]
+let imgSrcs = ["vehicles.png";"obstacles.png";"items.png"]
 let imgMap_opt = ref None
 
 (* Helper to create sprite image elements only once then cache. *)
@@ -54,27 +54,23 @@ let make_from_params params =
 let make_veh (vt:veh_typ) (vd:veh_dir) : sprite =
   let params = match vt with
     | Player -> begin match vd with
-                | Str -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
-                | Left -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
-                | Right -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+                | Str ->   setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+                | Left ->  setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 60)
+                | Right -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 120)
                 end
-    | Police -> begin match vd with
-                | Str -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
-                | Left -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
-                | Right -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
-                end
+    | Police -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 180)
   in
   make_from_params params
 
 let make_obst (ot:obst_typ) : sprite =
   let params = match ot with
-    | Barrier -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+    | Barrier -> setup_sprite "obstacles.png" ~bb_off:(0, 0) ~bb_sz:(60, 20) 1 (ref 0) (60, 20) (0, 0)
   in
   make_from_params params
                 
 let make_item (it:item_typ) : sprite =
   let params = match it with
-    | Health -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+    | Health -> setup_sprite "items.png" ~bb_off:(0, 0) ~bb_sz:(40, 40) 1 (ref 0) (40, 40) (0, 0)
   in
   make_from_params params
 
