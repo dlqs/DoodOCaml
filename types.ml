@@ -21,31 +21,20 @@ type controls =
   | CLeft
   | CRight
 
-type pl_typ =
-  | Standing
-  | Rocketing
+type veh_typ =
+  | Player
+  | Police
 
-type tile_typ =
-  | Green
-  | Blue
-  | Yellow
-  | White
+type veh_dir =
+  | Str
+  | Left
+  | Right
+
+type obst_typ =
+  | Barrier
 
 type item_typ = 
-  | Rocket
-  | Spring
-  | Monster
-
-type sprite_typ =
-  | PStanding
-  | PRocketing
-  | IRocket
-  | ISpring
-  | IMonster
-  | TGreen
-  | TBlue
-  | TYellow
-  | TWhite
+  | Health
 
 type imgMap_t = Dom_html.imageElement Js.t Map.Make(String).t
 
@@ -78,8 +67,8 @@ type obj_state = {
   }
 
 type collidable =
-  | Player of pl_typ * sprite * obj_state
-  | Tile of tile_typ * sprite * obj_state
+  | Vehicle of veh_typ * veh_dir * sprite * obj_state
+  | Obstacle of obst_typ * sprite * obj_state
   | Item of item_typ * sprite * obj_state
 
 (* Represents the values of relevant key bindings. *)

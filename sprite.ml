@@ -51,17 +51,30 @@ let make_from_params params =
     img;
   }
 
-let make (typ: sprite_typ) : sprite =
-  let params = match typ with
-    | PStanding -> setup_sprite "doodle.png" 1 (ref 0) (30, 45) (0,0)
-    | PRocketing ->setup_sprite "doodle.png" 2 (ref 10) (30, 60) (0,45)
-    | IRocket ->   setup_sprite "items.png" 1 (ref 0) (20, 30) (0,0)
-    | ISpring ->   setup_sprite "items.png" ~bb_off:(0, 0) ~bb_sz:(15, 10) 1 (ref 0) (15, 10) (0,21)
-    | IMonster ->  setup_sprite "items.png" ~bb_off:(0, 0) ~bb_sz:(38, 25) 1 (ref 0) (38, 25) (0,31)
-    | TGreen ->    setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 (ref 0) (40, 10) (0,0)
-    | TBlue ->     setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 (ref 0) (40, 10) (0,10)
-    | TYellow ->   setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 2 (ref 80) (40, 10) (0,20)
-    | TWhite ->    setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 (ref 0) (40, 10) (0,30)
+let make_veh (vt:veh_typ) (vd:veh_dir) : sprite =
+  let params = match vt with
+    | Player -> begin match vd with
+                | Str -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+                | Left -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+                | Right -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+                end
+    | Police -> begin match vd with
+                | Str -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+                | Left -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+                | Right -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+                end
+  in
+  make_from_params params
+
+let make_obst (ot:obst_typ) : sprite =
+  let params = match ot with
+    | Barrier -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
+  in
+  make_from_params params
+                
+let make_item (it:item_typ) : sprite =
+  let params = match it with
+    | Health -> setup_sprite "vehicles.png" ~bb_off:(0, 0) ~bb_sz:(40, 60) 1 (ref 0) (40, 60) (0, 0)
   in
   make_from_params params
 

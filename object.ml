@@ -28,102 +28,73 @@ let setup () : obj_state =
 
 (*Helper methods for getting sprites and objects from their collidables*)
 let get_sprite = function
-  | Player (_,s,_) | Tile(_,s,_) | Item(_,s,_) -> s
+  | Vehicle (_,_,s,_) | Obstacle(_,s,_) | Item(_,s,_) -> s
 
 let get_obj = function
-  | Player (_,_,o) | Tile(_,_,o) | Item(_,_,o) -> o
+  | Vehicle (_,_,_,o) | Obstacle(_,_,o) | Item(_,_,o) -> o
 
-let make_player (typ:pl_typ) (pos:xy) (created_at:float) : collidable =  
+let make_veh (typ:veh_typ) (dir:veh_dir) (pos:xy) : collidable =  
+  let vo = { (setup ()) with
+             vel = { fx = 0.; fy = pl_jmp_vel };
+             pos;
+           } in
   match typ with
-  | Standing -> 
-     let po = { (setup ()) with
-                vel = { fx = 0.; fy = pl_jmp_vel };
-                pos;
-                created_at;
-              } in
-     Player(Standing, Sprite.make PStanding, po)
-  | Rocketing ->
-     let po = { (setup ()) with
-                vel = { fx = 0.; fy = pl_jmp_vel };
-                pos;
-                created_at;
-              } in
-     Player(Rocketing, Sprite.make PRocketing, po)
+  | Player -> 
+     Vehicle(Player, dir, Sprite.make_veh Player Str, vo)
+  | Police ->
+     Vehicle(Police, dir, Sprite.make_veh Police Str, vo)
 
-let make_tile (typ:tile_typ) (pos:xy) (created_at:float) : collidable =  
-  let sprite = match typ with
-    | Green -> Sprite.make TGreen
-    | Yellow -> Sprite.make TYellow
-    | White -> Sprite.make TWhite
-    | Blue -> Sprite.make TBlue
-  in
-  let vel = match typ with
-    | Green | Yellow | White -> { fx = 0. ; fy = 0.; }
-    | Blue -> { fx = 1.; fy = 0.; }
-  in
-  let t_o = { (setup ()) with
-              vel;
-              pos;
-              created_at;
-            } in
-  Tile(typ, sprite, t_o)
+let make_obst (typ:obst_typ) (pos:xy) : collidable =  
+  let oo = { (setup ()) with
+             pos;
+           } in
+  match typ with
+  | Barrier -> Obstacle(Barrier, Sprite.make_obst Barrier, oo)
 
-let make_item (typ:item_typ) (pos:xy) (created_at:float) : collidable =
+let make_item (typ:item_typ) (pos:xy) : collidable =
   let sprite = match typ with
-    | Rocket -> Sprite.make IRocket
-    | Spring -> Sprite.make ISpring
-    | Monster -> Sprite.make IMonster
+    | Health -> Sprite.make_item Health
   in
   let io = { (setup ()) with
              pos;
-             created_at;
            } in
   Item(typ, sprite, io)
 
-let update ?plt:p_t ?it:i_t ?tt:t_t
+let update ?vt:v_t ?vd:v_d ?it:i_t ?ot:o_t
       ?spr ?pos ?vel ?debug_pt ?killed ?created_at (collid:collidable) =
   (* Helpers *)
   let may ~f x y =
-    match y with
-    | None -> x
-    | Some y -> f x y in
+    match x with
+    | None -> y
+    | Some x -> f x y in
   let may2 x y =
     match y with
     | None -> x
     | Some y -> y in
-  let set_vel o vel = { o with vel; } in
-  let set_pos o pos = { o with pos; } in
-  let set_debug_pt o debug_pt = { o with debug_pt; } in
-  let set_killed o killed = { o with killed; } in
-  let set_created_at o created_at = { o with created_at; } in
+  let set_vel vel o = { o with vel; } in
+  let set_pos pos o = { o with pos; } in
+  let set_debug_pt debug_pt o = { o with debug_pt; } in
+  let set_killed killed o = { o with killed; } in
+  let set_created_at created_at o = { o with created_at; } in
   (* Actual *)
+  let o = get_obj collid |> may ~f:set_vel vel
+                         |> may ~f:set_pos pos
+                         |> may ~f:set_debug_pt debug_pt
+                         |> may ~f:set_killed killed
+                         |> may ~f:set_created_at created_at
+  in
+  let s = may2 (get_sprite collid) spr in
   match collid with
-  | Player(plt, ps, po) ->
-     let po = may ~f:set_vel po vel in
-     let po = may ~f:set_pos po pos in
-     let po = may ~f:set_debug_pt po debug_pt in
-     let po = may ~f:set_created_at po created_at in
-     let ps = may2 ps spr in
-     let plt = may2 plt p_t in
-     Player(plt, ps, po)
-  | Tile(tt,ts,t_o) ->
-     let t_o = may ~f:set_vel t_o vel in
-     let t_o = may ~f:set_pos t_o pos in
-     let t_o = may ~f:set_debug_pt t_o debug_pt in
-     let t_o = may ~f:set_killed t_o killed in
-     let t_o = may ~f:set_created_at t_o created_at in
-     let ts = may2 ts spr in
-     let tt = may2 tt t_t in
-     Tile(tt, ts, t_o)
-  | Item(it, is, io) ->
-     let io = may ~f:set_vel io vel in
-     let io = may ~f:set_pos io pos in
-     let io = may ~f:set_debug_pt io debug_pt in
-     let io = may ~f:set_killed io killed in
-     let io = may ~f:set_created_at io created_at in
-     let is = may2 is spr in
+  | Vehicle(vt, vd, _, _) ->
+     let vt = may2 vt v_t in
+     let vd = may2 vd v_d in
+     Vehicle(vt, vd, s, o)
+  | Obstacle(ot, _, _) ->
+     let ot = may2 ot o_t in
+     Obstacle(ot, s, o)
+  | Item(it, _, _) ->
      let it = may2 it i_t in
-     Item(it, is, io)
+     Item(it, s, o)
 
 let update_animation collid =
   Sprite.update_animation (get_sprite collid); collid
@@ -209,15 +180,22 @@ let is_bbox_above c1 c2 =
 (* Returns the closer bbox c2/c3 to c1 *)
 let closer_bbox c1 c2 c3 =
   if (dist_collid c1 c2) < (dist_collid c1 c3) then c2 else c3
+
 let rec update_player_keys controls collid =
   match controls with
   | [] -> collid
   | ctrl::t -> let vel = (get_obj collid).vel in
-               let fx = match ctrl with
-               | CLeft  -> max (vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0)
-               | CRight -> min (vel.fx +. pl_lat_vel) pl_max_lat_vel
+               let collid = match ctrl with
+                 | CLeft ->
+                    let vel = { vel with
+                                fx = max (vel.fx -. pl_lat_vel) pl_max_lat_vel*.(-1.0) } in
+                    update ~vel ~vd:Left collid
+                 | CRight ->
+                    let vel = { vel with
+                                fx = min (vel.fx +. pl_lat_vel) pl_max_lat_vel } in
+                    update ~vel ~vd:Left collid
                in
-               update_player_keys t (update ~vel:{ vel with fx=fx } collid)
+               update_player_keys t collid
           
 let update_debug_pt (co:collidable option) (player:collidable): collidable =
   match co with
@@ -240,71 +218,25 @@ let move state collid =
   let vpt_width = state.vpt.dim.x in
   (* actual *)
   match collid with
-  | Player(Standing, ps, po) as player ->
-     (* Player will wraparound and is the only collidable subject to friction, gravity. *)
-     let player_width = fst ps.params.frame_size in
-     let pos = wraparound_x player_width vpt_width (add_fxy_to_xy po.pos po.vel) in
-     let vel = {
-         fy = po.vel.fy +. gravity;
-         fx = po.vel.fx *. friction_coef;
-       } in
-     update ~vel ~pos player
-  | Player(Rocketing, ps, po) as player ->
-     let player_width = fst ps.params.frame_size in
-     let pos = wraparound_x player_width vpt_width (add_fxy_to_xy po.pos po.vel) in
-     let vel = {
-         fy = po.vel.fy;
-         fx = po.vel.fx *. friction_coef;
-       } in
-     update ~vel ~pos player
-  | Tile(Blue,ts,t_o) as tile -> 
-     let pos = add_fxy_to_xy t_o.pos t_o.vel in
-     let width = fst (get_sprite tile).params.bbox_size in
-     let vel = bouncearound_x width vpt_width pos t_o.vel in
-     update ~vel ~pos tile
+  | Vehicle(Player, _, _, vo) as veh ->
+     let pos = add_fxy_to_xy vo.pos vo.vel in
+     update ~pos veh
   | _ -> failwith "Not implemented"
 
-(* One-body collision *)
-let do_collision c1 c2 =
-  match c1 with
-  | Player(plt, ps, po) as p ->
-     begin match c2 with
-     | Tile(tt, ts, t_o) as t -> 
-        if ((will_collide p t) &&
-            (not (currently_colliding p t)) &&
-            (po.vel.fy < 0.)
-           )
-        then
-          let po = { po with vel = { po.vel with fy = pl_jmp_vel };
-                             pos = { x = (po.pos.x + (int_of_float (po.vel.fx/.2.)));
-                                     y = (po.pos.y + (int_of_float (po.vel.fy/.2.)))}
-                   } in
-          Player(plt, ps, po)
-        else
-          p
-     | _ -> c1
-     end
-  | _ -> c1
-
-let find_closest_collidable player collids =
-  let rec helper current_closest collids =
+let find_closest_collidable (player:collidable) (collids:collidable list) : collidable option =
+  let match_helper (collid:collidable) : collidable option = 
+    match collid with
+    | Obstacle(Barrier,_,_) ->
+       if (will_collide collid player) then Some collid else None
+    | Item(_,_,_) ->
+       if (will_collide collid player) then Some collid else None
+    | _ -> None
+  in
+  let rec helper (current_closest:collidable option) (collids:collidable list) : collidable option =
     match collids with
     | [] -> current_closest
     | h::t ->
-       let j = match h with
-               | Tile(_,_,_) as tile ->
-                  if ((is_bbox_above player tile) && (will_collide player tile))
-                  then Some tile else None
-               | Item(it,_,_) as item ->
-                  begin match it with
-                  | Rocket | Monster ->
-                     if (will_collide player item) then Some item else None
-                  | Spring -> 
-                     if ((is_bbox_above player item) && (will_collide player item))
-                     then Some item else None
-                  end
-               | _ -> None
-       in
+       let j = match_helper h in
        match current_closest with
        | None -> begin match j with
                  | None -> helper None t
@@ -318,50 +250,25 @@ let find_closest_collidable player collids =
   helper None collids
 
   
-let handle_collision state player collid =
+let handle_collision state player collid : collidable * collidable =
   let po = get_obj player in
-  match collid with
-  | Player(_,_,_) -> failwith "Player cannot collid with itself" 
-  | Tile(tt,_,_) ->
-     let killed = match tt with
-       | White -> true
-       | _ -> false
-     in
-     let vel = { po.vel with fy = pl_jmp_vel } in
-     let player = update ~vel player in
-     let collid = update ~killed collid in
-     (player, collid)
-  | Item(it,_,_) ->
-     match it with
-     | Rocket ->
-        let player = make_player Rocketing po.pos state.time in
-        let collid = update ~killed:true collid in
-        (player, collid)
-     | Spring ->
-        let vel = { po.vel with fy = 2.*.pl_jmp_vel } in
-        let player = update ~vel player in
-        (player, collid)
-     | Monster ->
-        if (is_bbox_above player collid)
-        then
-          let collid = update ~killed:true collid in
-          (player, collid)
-        else 
-          let player = update ~killed:true player in
-          (player, collid)
+  let collid = match collid with
+    | Vehicle(Player,_,_,_) -> failwith "Player cannot collid with itself" 
+    | Vehicle(Police,_,_,_) -> print_endline "hit police"; collid
+    | Obstacle(_,_,_) -> print_endline "hit obst"; collid
+    | Item(_,_,_) -> print_endline "hit item"; collid
+  in
+  (player, collid)
+          
 
 let update_player_typ state player =
   match player with
-  | Player(Rocketing, ps, po) ->
-     if state.time >= po.created_at +. 5000.
-     then make_player Standing po.pos state.time
-     else player
   | _ -> player
+
 let update_player_collids state keys player collids : collidable * collidable list =
   let closest_collidable = find_closest_collidable player collids in
   let player = player |> update_player_keys keys
                       |> update_debug_pt closest_collidable
-                      |> update_animation
                       |> update_player_typ state
   in
   match closest_collidable with
@@ -375,20 +282,11 @@ let update_player_collids state keys player collids : collidable * collidable li
 (* collid only (no collid-collid interactions) *)
 let update_collid state collid =
   match collid with
-  | Player(_,_,_) as player -> failwith "Call update_player instead"
-  | Tile(Blue,_,_) as tile ->
-     tile |> move state
-  | Tile(Yellow,_,t_o) as tile ->
-     let explode_time = 8000. in
-     if state.time > t_o.created_at +. explode_time 
-       then tile |> update ~killed:true else
-       tile |> update_animation
-  | Tile(White,_,_) as tile ->
-     tile
+  | Vehicle(Player,_,_,_) as player -> failwith "Call update_player instead"
+  | Vehicle(Police,_,_,_) as police ->
+     police |> move state
   | _ -> collid
 
 let update_collid_second state collid =
   match collid with
-  | Tile(Yellow,_,t_o) as tile ->
-       tile |> (update_max_ticks 0.80)
   | _ -> collid
