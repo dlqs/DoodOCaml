@@ -18,8 +18,8 @@ val update : ?vt:veh_typ -> ?vd:veh_dir -> ?it:item_typ -> ?ot:obst_typ ->
 
 val move : state -> collidable -> collidable
 
-val update_player_collids : state -> controls list -> collidable -> collidable list -> collidable * collidable list
+val update_player_keys : controls list -> collidable -> collidable
 
-val update_collid : state -> collidable -> collidable
+val check_collisions : state -> collidable list -> collidable list
 
 val update_collid_second : state -> collidable -> collidable

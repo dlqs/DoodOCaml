@@ -98,10 +98,10 @@ let update ?vt:v_t ?vd:v_d ?it:i_t ?ot:o_t
 
 let update_animation collid =
   Sprite.update_animation (get_sprite collid); collid
-     
+
 let update_max_ticks coeff collid =
   Sprite.update_max_ticks (get_sprite collid) coeff ; collid
-  
+
 let get_aabb collid =
   let spr = ((get_sprite collid).params) in
   let obj_st = get_obj collid in
@@ -124,8 +124,8 @@ let get_aabb_center collid =
 let bb_move (b: aabb) (v: fxy) : aabb =
   {
     b with pos = {
-      x = b.pos.x + (int_of_float v.fx); 
-      y = b.pos.y + (int_of_float v.fy); 
+      x = b.pos.x + (int_of_float v.fx);
+      y = b.pos.y + (int_of_float v.fy);
     }
   }
 
@@ -250,21 +250,10 @@ let find_closest_collidable (player:collidable) (collids:collidable list) : coll
   helper None collids
 
   
-let handle_collision state player collid : collidable * collidable =
-  let po = get_obj player in
-  let collid = match collid with
-    | Vehicle(Player,_,_,_) -> failwith "Player cannot collid with itself" 
-    | Vehicle(Police,_,_,_) -> print_endline "hit police"; collid
-    | Obstacle(_,_,_) -> print_endline "hit obst"; collid
-    | Item(_,_,_) -> print_endline "hit item"; collid
-  in
-  (player, collid)
-          
-
 let update_player_typ state player =
   match player with
   | _ -> player
-
+(*
 let update_player_collids state keys player collids : collidable * collidable list =
   let closest_collidable = find_closest_collidable player collids in
   let player = player |> update_player_keys keys
@@ -278,7 +267,7 @@ let update_player_collids state keys player collids : collidable * collidable li
      let collids = List.map (fun collid ->
                      if (get_obj collid).id = (get_obj collided).id then collided else collid) collids in
      (player, collids)
-      
+ *)     
 (* collid only (no collid-collid interactions) *)
 let update_collid state collid =
   match collid with
@@ -286,6 +275,25 @@ let update_collid state collid =
   | Vehicle(Police,_,_,_) as police ->
      police |> move state
   | _ -> collid
+
+let handle_collision state c1 c2 = 
+  match c1 with
+  | Vehicle(Player,_,_,_) as player ->
+      (player |> move state, c2)
+  | Vehicle(Police,_,_,_) -> (c1, c2)
+  | _ -> (c1, c2)
+
+let check_collisions state collids =
+  let collid_arr = Array.of_list collids in
+  Array.iteri (fun i c1 ->
+      Array.iteri (fun j c2 ->
+          let (c1, c2) = handle_collision state c1 c2 in
+          Array.set collid_arr i c1;
+          Array.set collid_arr j c2;
+        ) collid_arr
+    ) collid_arr;
+  Array.to_list collid_arr
+
 
 let update_collid_second state collid =
   match collid with

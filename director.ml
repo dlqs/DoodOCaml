@@ -44,8 +44,8 @@ let update_time time state =
   { state with time; }
 
 (* Moves viewport upwards as player moves upwards *)
-let update_viewport player state =
-  let vpt = Viewport.move state.vpt player in
+let update_viewport state =
+  let vpt = Viewport.move state in
   { state with vpt; }
 
 (* Reached current generated level: sets new height for the next one *)
@@ -61,20 +61,20 @@ let update_generated_height state =
   { state with last_generated_height; next_generated_height; }
 
 (* Handles player only and player-collids collisions *)
-let update_player_collids state player collids =
+let update_player_keys player =
   let keys = translate_keys() in
-  Object.update_player_collids state keys player collids
-
-(* Handles collids only (there are no collid-collid collisions) *)
-let update_collids state collids =
-  if check_second state.time then
-    collids |> List.map (Object.update_collid state)
-            |> List.map(Object.update_collid_second state) 
-  else
-    List.map (Object.update_collid state) collids
+  Object.update_player_keys keys player 
 
 let update_score state =
   { state with score = state.vpt.pos.y }
+
+let check_collisions state player collids =
+  let all_collids = Object.check_collisions state (player::collids) in
+  (List.hd all_collids, List.tl all_collids)
+
+let update_second state player collids = 
+  let all_collids = List.map (Object.update_collid_second state) (player::collids) in
+  (List.hd all_collids, List.tl all_collids)
 
 let move_from_pre_generated state collids pre_generated =
   let move_in = pre_generated |> List.filter (fun c -> not (Viewport.above_vpt state.vpt c))
@@ -95,6 +95,7 @@ let setup canvas =
     vpt;
     time = 0.;
     score = 0;
+    speed = 2;
     last_generated_height = 0;
     next_generated_height = 2*ch;
     draw_bb = false;
@@ -105,8 +106,8 @@ let start canvas =
   let rec game_loop time state player collids pre_generated = begin
       let state = state |> update_time time
                         |> update_draw_bb
-                        |> update_viewport player
-                        |> update_generated_height 
+                        |> update_viewport
+                        |> update_generated_height
                         |> update_score
       in
 
@@ -122,18 +123,16 @@ let start canvas =
       state    |> Draw.show_score canvas;
 
       (*Update existing collidables*)
-      let (player,collids) = collids |> List.filter (Viewport.in_vpt state.vpt)
-                                     |> update_player_collids state player
-      in
-      let collids = collids |> update_collids state 
-                            |> remove_collids state
-      in
+      let player = update_player_keys player in
+      let (player,collids) = check_collisions state player collids in
+      let (player,collids) = update_second state player collids in
+      let collids = remove_collids state collids in
 
       (* generate new collidables, but these will not be in-view yet*)
       let pre_generated = pre_generated |> generate_collids state in
 
       (* Prepare next phase *)
-      ignore (Dom_html.window##requestAnimationFrame 
+      ignore (Dom_html.window##requestAnimationFrame
               (Js.wrap_callback (fun (next_time:float) ->
                game_loop next_time state player collids pre_generated));)
     end in

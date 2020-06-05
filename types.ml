@@ -1,5 +1,5 @@
 open Js_of_ocaml
-   
+
 type xy = {
     x: int;
     y: int;
@@ -33,7 +33,7 @@ type veh_dir =
 type obst_typ =
   | Barrier
 
-type item_typ = 
+type item_typ =
   | Health
 
 type imgMap_t = Dom_html.imageElement Js.t Map.Make(String).t
@@ -92,6 +92,7 @@ type state = {
   vpt: viewport;
   time: float;
   score: int;
+  speed: int;
   next_generated_height: int;
   last_generated_height: int;
   draw_bb: bool;
