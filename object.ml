@@ -6,6 +6,8 @@ let friction_coef = 0.92  (* coefficient of velocity along x axis only *)
 let pl_jmp_vel = 7.0
 let pl_lat_vel = 2.
 let pl_max_lat_vel = 4.
+let pl_max_y_vel = 2.
+let pl_y_acc = 0.5
 
 let id_counter = ref min_int
 
@@ -196,7 +198,7 @@ let rec update_player_keys controls collid =
                     update ~vel ~vd:Left collid
                in
                update_player_keys t collid
-          
+
 let update_debug_pt (co:collidable option) (player:collidable): collidable =
   match co with
   | Some ct -> update ~debug_pt:(Some (get_aabb_center ct)) player
@@ -204,6 +206,8 @@ let update_debug_pt (co:collidable option) (player:collidable): collidable =
 
 (* Returns a moved collidable, depending on its movement semantics *)
 let move state collid =
+  let add_fxy_to_fxy a b = { fx = a.fx +. b.fx;
+                             fy = a.fy +. b.fy; } in
   let add_fxy_to_xy a b = { x = a.x + int_of_float b.fx;
                             y = a.y + int_of_float b.fy; } in
   (* Helper to wraparound position along the x-axis including width of obj *)
@@ -215,16 +219,22 @@ let move state collid =
   let bouncearound_x width max_x pos vel = { vel with fx =
                  if (pos.x <= 0 && vel.fx < 0.) || (pos.x + width >= max_x && vel.fx > 0.)
                  then vel.fx*.(-1.0) else vel.fx } in
+  let clamp_x widthX maxX pos =
+                let x = max 0 pos.x in
+                let x = min (maxX - widthX) x in
+                { pos with x } in
   let vpt_width = state.vpt.dim.x in
   (* actual *)
   match collid with
-  | Vehicle(Player, _, _, vo) as veh ->
-     let pos = add_fxy_to_xy vo.pos vo.vel in
-     update ~pos veh
+  | Vehicle(Player, _, ps, vo) as veh ->
+     let widthX = (fst ps.params.bbox_size) in
+     let pos = clamp_x widthX vpt_width (add_fxy_to_xy vo.pos vo.vel) in
+     let vel = { vo.vel with fy = min (vo.vel.fy +. pl_y_acc) pl_max_y_vel } in
+     update ~pos ~vel veh
   | _ -> failwith "Not implemented"
 
 let find_closest_collidable (player:collidable) (collids:collidable list) : collidable option =
-  let match_helper (collid:collidable) : collidable option = 
+  let match_helper (collid:collidable) : collidable option =
     match collid with
     | Obstacle(Barrier,_,_) ->
        if (will_collide collid player) then Some collid else None
@@ -249,7 +259,7 @@ let find_closest_collidable (player:collidable) (collids:collidable list) : coll
   in
   helper None collids
 
-  
+
 let update_player_typ state player =
   match player with
   | _ -> player
@@ -276,7 +286,7 @@ let update_collid state collid =
      police |> move state
   | _ -> collid
 
-let handle_collision state c1 c2 = 
+let handle_collision state c1 c2 =
   match c1 with
   | Vehicle(Player,_,_,_) as player ->
       (player |> move state, c2)
