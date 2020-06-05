@@ -16,10 +16,8 @@ val update : ?vt:veh_typ -> ?vd:veh_dir -> ?it:item_typ -> ?ot:obst_typ ->
              ?spr:sprite -> ?pos:xy -> ?vel:fxy -> ?debug_pt:xy option -> ?killed:bool -> ?created_at:float
              -> collidable -> collidable
 
-val move : state -> collidable -> collidable
-
 val update_player_keys : controls list -> collidable -> collidable
 
-val check_collisions : state -> collidable list -> collidable list
+val update_collids : state -> collidable list -> collidable list
 
-val update_collid_second : state -> collidable -> collidable
+val update_collids_per_second : state -> collidable list -> collidable list

@@ -68,12 +68,12 @@ let update_player_keys player =
 let update_score state =
   { state with score = state.vpt.pos.y }
 
-let check_collisions state player collids =
-  let all_collids = Object.check_collisions state (player::collids) in
+let update_collids state player collids =
+  let all_collids = Object.update_collids state (player::collids) in
   (List.hd all_collids, List.tl all_collids)
 
-let update_second state player collids = 
-  let all_collids = List.map (Object.update_collid_second state) (player::collids) in
+let update_collids_per_second state player collids =
+  let all_collids = Object.update_collids_per_second state (player::collids) in
   (List.hd all_collids, List.tl all_collids)
 
 let move_from_pre_generated state collids pre_generated =
@@ -124,8 +124,8 @@ let start canvas =
 
       (*Update existing collidables*)
       let player = update_player_keys player in
-      let (player,collids) = check_collisions state player collids in
-      let (player,collids) = update_second state player collids in
+      let (player,collids) = update_collids state player collids in
+      let (player,collids) = update_collids_per_second state player collids in
       let collids = remove_collids state collids in
 
       (* generate new collidables, but these will not be in-view yet*)
@@ -139,9 +139,9 @@ let start canvas =
   let debug = false in
   let initial_state = setup canvas in
   let cw = initial_state.vpt.dim.x and ch = initial_state.vpt.dim.y in
-  let initial_player = Object.make_veh Player Str { x = cw/2; y = cw/8 } in
+  let initial_player = Object.make_veh Player Str { x = cw/2; y = cw/3 } in
   let initial_collids = if debug then Pg.generate_debug
-                        else Pg.generate initial_state 
+                        else Pg.generate initial_state
   in
   game_loop 0. initial_state initial_player [] initial_collids
 

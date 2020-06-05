@@ -2,7 +2,7 @@ open Types
 
 (*Variables*)
 let gravity = -0.15 (* constant change in velocity along y axis only *)
-let friction_coef = 0.92  (* coefficient of velocity along x axis only *)
+let pl_x_fric_vel = 0.8  (* coefficient of velocity along x axis only *)
 let pl_jmp_vel = 7.0
 let pl_lat_vel = 2.
 let pl_max_lat_vel = 4.
@@ -35,18 +35,18 @@ let get_sprite = function
 let get_obj = function
   | Vehicle (_,_,_,o) | Obstacle(_,_,o) | Item(_,_,o) -> o
 
-let make_veh (typ:veh_typ) (dir:veh_dir) (pos:xy) : collidable =  
+let make_veh (typ:veh_typ) (dir:veh_dir) (pos:xy) : collidable =
   let vo = { (setup ()) with
              vel = { fx = 0.; fy = pl_jmp_vel };
              pos;
            } in
   match typ with
-  | Player -> 
+  | Player ->
      Vehicle(Player, dir, Sprite.make_veh Player Str, vo)
   | Police ->
      Vehicle(Police, dir, Sprite.make_veh Police Str, vo)
 
-let make_obst (typ:obst_typ) (pos:xy) : collidable =  
+let make_obst (typ:obst_typ) (pos:xy) : collidable =
   let oo = { (setup ()) with
              pos;
            } in
@@ -229,82 +229,74 @@ let move state collid =
   | Vehicle(Player, _, ps, vo) as veh ->
      let widthX = (fst ps.params.bbox_size) in
      let pos = clamp_x widthX vpt_width (add_fxy_to_xy vo.pos vo.vel) in
-     let vel = { vo.vel with fy = min (vo.vel.fy +. pl_y_acc) pl_max_y_vel } in
+     let vel = { fx = vo.vel.fx *. pl_x_fric_vel;
+                 fy = min (vo.vel.fy +. pl_y_acc) pl_max_y_vel } in
      update ~pos ~vel veh
-  | _ -> failwith "Not implemented"
-
-let find_closest_collidable (player:collidable) (collids:collidable list) : collidable option =
-  let match_helper (collid:collidable) : collidable option =
-    match collid with
-    | Obstacle(Barrier,_,_) ->
-       if (will_collide collid player) then Some collid else None
-    | Item(_,_,_) ->
-       if (will_collide collid player) then Some collid else None
-    | _ -> None
-  in
-  let rec helper (current_closest:collidable option) (collids:collidable list) : collidable option =
-    match collids with
-    | [] -> current_closest
-    | h::t ->
-       let j = match_helper h in
-       match current_closest with
-       | None -> begin match j with
-                 | None -> helper None t
-                 | Some j -> helper (Some j) t end
-       | Some i -> begin match j with
-                   | None -> helper (Some i) t
-                   | Some j ->
-                      let closer = closer_bbox player i h in
-                      helper (Some closer) t end
-  in
-  helper None collids
-
-
-let update_player_typ state player =
-  match player with
-  | _ -> player
-(*
-let update_player_collids state keys player collids : collidable * collidable list =
-  let closest_collidable = find_closest_collidable player collids in
-  let player = player |> update_player_keys keys
-                      |> update_debug_pt closest_collidable
-                      |> update_player_typ state
-  in
-  match closest_collidable with
-  | None -> (player |> move state, collids)
-  | Some closest_collidable -> 
-     let (player, collided) = handle_collision state player closest_collidable in
-     let collids = List.map (fun collid ->
-                     if (get_obj collid).id = (get_obj collided).id then collided else collid) collids in
-     (player, collids)
- *)     
-(* collid only (no collid-collid interactions) *)
-let update_collid state collid =
-  match collid with
-  | Vehicle(Player,_,_,_) as player -> failwith "Call update_player instead"
-  | Vehicle(Police,_,_,_) as police ->
-     police |> move state
   | _ -> collid
 
-let handle_collision state c1 c2 =
-  match c1 with
-  | Vehicle(Player,_,_,_) as player ->
-      (player |> move state, c2)
-  | Vehicle(Police,_,_,_) -> (c1, c2)
-  | _ -> (c1, c2)
+let check_collision state collid collids =
+  let handle_collision (c1:collidable) (c2:collidable) : collidable * collidable =
+    match c1 with
+    | Vehicle(Player,_,_,vo) as player ->
+      begin match c2 with
+      | Obstacle(Barrier,_,_) ->
+  print_endline "hello";
+        let vel = { vo.vel with fy = vo.vel.fy *. 0.5 } in
+        let player = update ~vel player in
+        (player, c2)
+      | _ -> (player, c2)
+      end
+    | Vehicle(Police,_,_,_) -> (c1, c2)
+    | _ -> (c1, c2)
+  in
+  let find_closest_collidable (collid:collidable) (collids:collidable list) : collidable option =
+    let match_helper (to_match:collidable) : collidable option =
+      match to_match with
+      | Obstacle(Barrier,_,_) ->
+        if (will_collide to_match collid) then Some to_match else None
+      | Item(_,_,_) ->
+        if (will_collide to_match collid) then Some to_match else None
+      | _ -> None
+    in
+    let rec helper (current_closest:collidable option) (collids:collidable list) : collidable option =
+      match collids with
+      | [] -> current_closest
+      | h::t ->
+        let j = match_helper h in
+        match current_closest with
+        | None -> begin match j with
+                  | None -> helper None t
+                  | Some j -> helper (Some j) t end
+        | Some i -> begin match j with
+                    | None -> helper (Some i) t
+                    | Some j ->
+                        let closer = closer_bbox collid i h in
+                        helper (Some closer) t end
+    in
+    helper None collids
+  in
+  let collidable_opt = find_closest_collidable collid collids in
+  match collidable_opt with
+  | None -> None
+  | Some collided -> Some (handle_collision collid collided)
 
-let check_collisions state collids =
+let update_collids state collids =
   let collid_arr = Array.of_list collids in
-  Array.iteri (fun i c1 ->
-      Array.iteri (fun j c2 ->
-          let (c1, c2) = handle_collision state c1 c2 in
+  Array.iteri (fun i c ->
+    match c with
+    | Vehicle(Player,_,_,_) | Vehicle(Police,_,_,_) ->
+      let collision_opt = check_collision state c collids in
+      begin match collision_opt with
+      | None -> Array.set collid_arr i (move state c);
+      | Some (c1, c2) ->
           Array.set collid_arr i c1;
-          Array.set collid_arr j c2;
-        ) collid_arr
+          Array.set collid_arr i c2;
+      end
+    | _ -> Array.set collid_arr i (move state c);
     ) collid_arr;
   Array.to_list collid_arr
 
 
-let update_collid_second state collid =
-  match collid with
-  | _ -> collid
+let update_collids_per_second state collids =
+  List.map (fun c -> c) collids
+
