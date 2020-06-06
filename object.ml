@@ -231,6 +231,12 @@ let move state collid =
      let vel = { fx = vo.vel.fx *. pl_vel_fric_x;
                  fy = min (vo.vel.fy +. pl_acc_y) pl_vel_max_y } in
      update ~pos ~vel veh
+  | Vehicle(Police, _, ps, vo) as veh ->
+     let widthX = (fst ps.params.bbox_size) in
+     let pos = clamp_x widthX vpt_width (add_fxy_to_xy vo.pos vo.vel) in
+     let vel = { fx = vo.vel.fx *. pl_vel_fric_x;
+                 fy = min (vo.vel.fy +. pl_acc_y) pl_vel_max_y } in
+     update ~pos ~vel veh
   | _ -> collid
 
 
@@ -279,7 +285,7 @@ let update_collids (state:state) (collids:collidable list) : collidable list =
         (player |> move state, c2)
       | _ -> (player |> move state, c2)
       end
-    | Vehicle(Police,_,_,_) -> (c1, c2)
+    | Vehicle(Police,_,_,_) as police -> (police |> move state, c2)
     | _ -> (c1, c2)
   in
   (* actual *)

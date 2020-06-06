@@ -39,15 +39,21 @@ let generate_object startY endY widthX  ~ba ~he =
   in
   generate_helper startY []
 
+let generate_police startY =
+  let pol = Object.make_veh Police Str { x = 50; y = startY } in
+  [pol]
 
 let generate (state:state) : collidable list =
   let startY = state.last_generated_height in
   let endY = state.next_generated_height in
   let widthX = state.vpt.dim.x in
   match state.next_generated_height with
-  | y when y < 1025 -> generate_object startY endY widthX ~ba:80 ~he:20
-  | y when y < 2049 -> generate_object startY endY widthX ~ba:80 ~he:20
-  | _ -> generate_object startY endY widthX ~ba:80 ~he:20
+    | y when y < 1025 ->
+      let pol = generate_police startY in
+      let objs = generate_object startY endY widthX ~ba:80 ~he:20 in
+      pol@objs
+    | y when y < 2049 -> generate_object startY endY widthX ~ba:80 ~he:20
+    | _ -> generate_object startY endY widthX ~ba:80 ~he:20
 
 let generate_debug =
   [
