@@ -63,7 +63,7 @@ let update_generated_height state =
 (* Handles player only and player-collids collisions *)
 let update_player_keys player =
   let keys = translate_keys() in
-  Object.update_player_keys keys player 
+  Object.update_player_keys keys player
 
 let update_score state =
   { state with score = state.vpt.pos.y }

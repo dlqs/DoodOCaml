@@ -67,7 +67,7 @@ let make_obst (ot:obst_typ) : sprite =
     | Barrier -> setup_sprite "obstacles.png" ~bb_off:(0, 0) ~bb_sz:(60, 20) 1 (ref 0) (60, 20) (0, 0)
   in
   make_from_params params
-                
+
 let make_item (it:item_typ) : sprite =
   let params = match it with
     | Health -> setup_sprite "items.png" ~bb_off:(0, 0) ~bb_sz:(40, 40) 1 (ref 0) (40, 40) (0, 0)
