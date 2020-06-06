@@ -44,8 +44,8 @@ let update_time time state =
   { state with time; }
 
 (* Moves viewport upwards as player moves upwards *)
-let update_viewport state =
-  let vpt = Viewport.move state in
+let update_viewport player state =
+  let vpt = Viewport.move state player in
   { state with vpt; }
 
 (* Reached current generated level: sets new height for the next one *)
@@ -106,7 +106,7 @@ let start canvas =
   let rec game_loop time state player collids pre_generated = begin
       let state = state |> update_time time
                         |> update_draw_bb
-                        |> update_viewport
+                        |> update_viewport player
                         |> update_generated_height
                         |> update_score
       in

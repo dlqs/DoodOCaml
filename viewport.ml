@@ -1,6 +1,6 @@
 open Types
 
-let make (vx,vy) = 
+let make (vx,vy) =
   {
     pos = {x = 0; y = 0;};
     dim = {x = vx; y = vy};
@@ -13,7 +13,7 @@ let below_vpt (vpt:viewport) (collid:collidable) : bool =
 
 let above_vpt (vpt:viewport) (collid:collidable) : bool =
   let obj = (Object.get_obj collid) in
-  obj.pos.y > vpt.pos.y + vpt.dim.y 
+  obj.pos.y > vpt.pos.y + vpt.dim.y
 
 let in_vpt (vpt:viewport) (collid:collidable) : bool =
   (not (above_vpt vpt collid)) && (not (below_vpt vpt collid))
@@ -31,8 +31,8 @@ let prepare_for_draw (vpt:viewport) (collid:collidable) : collidable  =
   let debug_pt = translate_debug_pt vpt obj.debug_pt in
   Object.update ~pos ~debug_pt collid
 
-let move (state:state) : viewport =
-  let y = state.vpt.pos.y + state.speed in
+let move (state:state) (player:collidable) : viewport =
+  let y = (Object.get_obj player).pos.y - 192 in
   { state.vpt with pos = { state.vpt.pos with y }}
 
 
