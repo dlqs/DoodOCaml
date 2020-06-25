@@ -2,14 +2,32 @@ open Types
 
 let blockY = 50
 let tile_width = 40
+let tile_height = 10
 let layer_height = 20
 
 (* tile probabilities *)
 type tile_prob = {g:int; b:int; w:int; y:int}
+(* item probabilities *)
+type item_prob = {r:int; s:int; m:int;}
 
 let get_tile_prob ?g:(g=0) ?b:(b=0) ?w:(w=0) ?y:(y=0) () =
   assert (g+b+w+y = 100);
   { g;b;w;y }
+
+let get_item_prob ?r:(r=0) ?s:(s=0) ?m:(m=0) () =
+  assert (r+s+m = 100);
+  { r;s;m; }
+
+let choose_item_typ (ip:item_prob) : item_typ =
+  let item_prob = 1 + Random.int 100 in
+  let rc = ip.r in
+  let sc = rc + ip.s in
+  let mc = sc + ip.m in
+  match item_prob with
+  | prob when prob <= rc -> Rocket
+  | prob when prob <= sc -> Spring
+  | prob when prob <= mc -> Monster
+  | _ -> failwith "does not add up to 100!"
 
 let choose_tile_typ (tp:tile_prob) : tile_typ =
   let tile_prob = 1 + Random.int 100 in
@@ -52,18 +70,54 @@ let rec generate_green_blue_tiles state startY endY tile_probs generated_tiles =
   let block = generate_block state startY (startY+blockY) tile_probs in
   generate_green_blue_tiles state (startY+blockY) endY tile_probs generated_tiles@block
 
+let rec place_items state tiles ip items =
+  match tiles with
+  | [] -> items
+  | tile::rest_tiles ->
+      let p = Random.float 1.0 in
+      let q = int_of_float (100.0 *. p) in
+      if q <= 20 then
+      let tile_pos = (Object.get_obj tile).pos in
+      let pos = { tile_pos with y = tile_pos.y + tile_height } in
+      let it = choose_item_typ ip in
+      let item = Object.make_item it pos state.time in
+      place_items state rest_tiles ip (item::items)
+    else
+      place_items state rest_tiles ip items
+
 let generate (state:state) : collidable list =
   let startY = state.last_generated_height + 1 in
   let endY = state.next_generated_height in
-  if endY < 1025 then
+  if endY < 1500 then
     let tp = (get_tile_prob ~g:90 ~b:10 ()) in
-    generate_green_blue_tiles state startY endY tp []
-  else if endY < 2049 then
+    let ip = (get_item_prob ~r:25 ~s:50 ~m:25 ()) in
+    let tiles = generate_green_blue_tiles state startY endY tp [] in
+    let items = place_items state tiles ip [] in
+    tiles@items
+  else if endY < 3000 then
     let tp = (get_tile_prob ~g:80 ~b:20 ()) in
-    generate_green_blue_tiles state startY endY tp []
-  else
+    let ip = (get_item_prob ~r:25 ~s:50 ~m:25 ()) in
+    let tiles = generate_green_blue_tiles state startY endY tp [] in
+    let items = place_items state tiles ip [] in
+    tiles@items
+  else if endY < 4500 then
     let tp = (get_tile_prob ~g:25 ~b:25 ~w:25 ~y:25 ()) in
-    generate_green_blue_tiles state startY endY tp []
+    let ip = (get_item_prob ~r:25 ~s:50 ~m:25 ()) in
+    let tiles = generate_green_blue_tiles state startY endY tp [] in
+    let items = place_items state tiles ip [] in
+    tiles@items
+  else if endY < 6000 then
+    let tp = (get_tile_prob ~g:20 ~b:20 ~w:30 ~y:30 ()) in
+    let ip = (get_item_prob ~r:25 ~s:50 ~m:25 ()) in
+    let tiles = generate_green_blue_tiles state startY endY tp [] in
+    let items = place_items state tiles ip [] in
+    tiles@items
+  else
+    let tp = (get_tile_prob ~g:15 ~b:15 ~w:35 ~y:35 ()) in
+    let ip = (get_item_prob ~r:25 ~s:50 ~m:25 ()) in
+    let tiles = generate_green_blue_tiles state startY endY tp [] in
+    let items = place_items state tiles ip [] in
+    tiles@items
 
 let generate_debug =
   [
