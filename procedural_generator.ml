@@ -90,31 +90,31 @@ let generate (state:state) : collidable list =
   let endY = state.next_generated_height in
   if endY < 1500 then
     let tp = (get_tile_prob ~g:90 ~b:10 ()) in
-    let ip = (get_item_prob ~r:25 ~s:50 ~m:25 ()) in
+    let ip = (get_item_prob ~r:30 ~s:70 ~m:0 ()) in
     let tiles = generate_green_blue_tiles state startY endY tp [] in
     let items = place_items state tiles ip [] in
     tiles@items
   else if endY < 3000 then
     let tp = (get_tile_prob ~g:80 ~b:20 ()) in
-    let ip = (get_item_prob ~r:25 ~s:50 ~m:25 ()) in
+    let ip = (get_item_prob ~r:30 ~s:50 ~m:20 ()) in
     let tiles = generate_green_blue_tiles state startY endY tp [] in
     let items = place_items state tiles ip [] in
     tiles@items
   else if endY < 4500 then
     let tp = (get_tile_prob ~g:25 ~b:25 ~w:25 ~y:25 ()) in
-    let ip = (get_item_prob ~r:25 ~s:50 ~m:25 ()) in
+    let ip = (get_item_prob ~r:20 ~s:50 ~m:30 ()) in
     let tiles = generate_green_blue_tiles state startY endY tp [] in
     let items = place_items state tiles ip [] in
     tiles@items
   else if endY < 6000 then
     let tp = (get_tile_prob ~g:20 ~b:20 ~w:30 ~y:30 ()) in
-    let ip = (get_item_prob ~r:25 ~s:50 ~m:25 ()) in
+    let ip = (get_item_prob ~r:20 ~s:50 ~m:30 ()) in
     let tiles = generate_green_blue_tiles state startY endY tp [] in
     let items = place_items state tiles ip [] in
     tiles@items
   else
     let tp = (get_tile_prob ~g:15 ~b:15 ~w:35 ~y:35 ()) in
-    let ip = (get_item_prob ~r:25 ~s:50 ~m:25 ()) in
+    let ip = (get_item_prob ~r:20 ~s:50 ~m:30 ()) in
     let tiles = generate_green_blue_tiles state startY endY tp [] in
     let items = place_items state tiles ip [] in
     tiles@items
