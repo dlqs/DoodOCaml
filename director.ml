@@ -75,6 +75,10 @@ let update_collids state collids =
 let update_score state =
   { state with score = state.vpt.pos.y }
 
+let update_game_over player state =
+  let game_over = Viewport.below_vpt state.vpt player in
+  { state with game_over; }
+
 let move_from_pre_generated state collids pre_generated =
   let move_in = pre_generated |> List.filter (fun c -> not (Viewport.above_vpt state.vpt c))
                               |> List.map (Object.update ~created_at:state.time)
@@ -107,6 +111,7 @@ let start canvas =
                         |> update_viewport player
                         |> update_generated_height
                         |> update_score
+                        |> update_game_over player
       in
 
       (* Import in-view collids *)
@@ -119,6 +124,8 @@ let start canvas =
       [player] |> List.map (Viewport.prepare_for_draw state.vpt)
                |> Draw.render state canvas;
       state    |> Draw.show_score canvas;
+
+      if state.game_over then Draw.show_game_over canvas state;
 
       (*Update existing collidables*)
       let (player,collids) = collids |> List.filter (Viewport.in_vpt state.vpt)

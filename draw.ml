@@ -53,6 +53,15 @@ let show_score canvas state =
   context##.fillStyle := (Js.string "white");
   ignore(context##fillText (Js.string score)  20.  20.)
 
+let show_game_over canvas state =
+  let texto = "Game over! Final score: " in
+  let score = (string_of_int state.score) in
+  let context = canvas##getContext (Dom_html._2d_) in
+  context##.font := (Js.string "15px Comic Sans MS");
+  context##.fillStyle := (Js.string "white");
+  ignore(context##fillText (Js.string texto)  30.  256.);
+  ignore(context##fillText (Js.string score)  120.  278.)
+
 (*Used for animation updating. Canvas is cleared each frame and redrawn.*)
 let clear_canvas canvas =
   let context = canvas##getContext (Dom_html._2d_) in
