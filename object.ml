@@ -102,6 +102,7 @@ let update ?plt:p_t ?it:i_t ?tt:t_t
      let po = may ~f:set_vel po vel in
      let po = may ~f:set_pos po pos in
      let po = may ~f:set_debug_pt po debug_pt in
+     let po = may ~f:set_killed po killed in
      let po = may ~f:set_created_at po created_at in
      let ps = may2 ps spr in
      let plt = may2 plt p_t in
@@ -235,6 +236,12 @@ let move state collid =
   (* actual *)
   match collid with
   | Player(Standing, ps, po) as player ->
+     (* Player killed *)
+     if po.killed then
+       let pos = add_fxy_to_xy po.pos po.vel in
+       let vel = { fy = po.vel.fy +. gravity; fx = 0. } in
+       update ~vel ~pos player
+     else
      (* Player will wraparound and is the only collidable subject to friction, gravity. *)
      let player_width = fst ps.params.frame_size in
      let pos = wraparound_x player_width vpt_width (add_fxy_to_xy po.pos po.vel) in
@@ -329,7 +336,9 @@ let update_player_typ state player =
      then make_player Standing po.pos state.time
      else player
   | _ -> player
+
 let update_player_collids state keys player collids : collidable * collidable list =
+  if (get_obj player).killed then (player |> move state, collids) else
   let closest_collidable = find_closest_collidable player collids in
   let player = player |> update_player_keys keys
                       |> update_debug_pt closest_collidable
@@ -342,7 +351,7 @@ let update_player_collids state keys player collids : collidable * collidable li
      let (player, collided) = handle_collision state player closest_collidable in
      let collids = List.map (fun collid ->
                      if (get_obj collid).id = (get_obj collided).id then collided else collid) collids in
-     (player, collids)
+     (player |> move state , collids)
 
 (* collid only (no collid-collid interactions) *)
 let update_collid state collid =

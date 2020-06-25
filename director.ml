@@ -125,18 +125,20 @@ let start canvas =
                |> Draw.render state canvas;
       state    |> Draw.show_score canvas;
 
-      if state.game_over then Draw.show_game_over canvas state;
 
       (*Update existing collidables*)
       let (player,collids) = collids |> List.filter (Viewport.in_vpt state.vpt)
                                      |> update_player_collids state player
       in
+
       let collids = collids |> update_collids state
                             |> remove_collids state
       in
 
       (* generate new collidables, but these will not be in-view yet*)
       let pre_generated = pre_generated |> generate_collids state in
+
+      if state.game_over then Draw.show_game_over canvas state;
 
       (* Prepare next phase *)
       ignore (Dom_html.window##requestAnimationFrame

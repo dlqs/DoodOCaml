@@ -90,7 +90,7 @@ let generate (state:state) : collidable list =
   let endY = state.next_generated_height in
   if endY < 1500 then
     let tp = (get_tile_prob ~g:90 ~b:10 ()) in
-    let ip = (get_item_prob ~r:30 ~s:70 ~m:0 ()) in
+    let ip = (get_item_prob ~r:30 ~s:0 ~m:70 ()) in
     let tiles = generate_green_blue_tiles state startY endY tp [] in
     let items = place_items state tiles ip [] in
     tiles@items
