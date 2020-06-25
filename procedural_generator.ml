@@ -3,7 +3,7 @@ open Types
 let blockY = 50
 let tile_width = 40
 let layer_height = 20
-       
+
 (* tile probabilities *)
 type tile_prob = {g:int; b:int; w:int; y:int}
 
@@ -34,7 +34,7 @@ let generate_layer state tile_prob y tile_probs =
   if q <= tile_prob then
     let x = int_of_float (p *. float_of_int (state.vpt.dim.x - tile_width)) in
     [generate_tile { x; y; } state.time tile_probs]
-  else 
+  else
     []
 
 let generate_block state startY endY tile_probs =
@@ -46,7 +46,7 @@ let generate_block state startY endY tile_probs =
   let first_layer = generate_layer state 100 startY tile_probs in
   let rest_layers = helper (startY+layer_height) endY [] in
   first_layer@rest_layers
-  
+
 let rec generate_green_blue_tiles state startY endY tile_probs generated_tiles =
   if startY + blockY >= endY then generated_tiles else
   let block = generate_block state startY (startY+blockY) tile_probs in
@@ -61,7 +61,7 @@ let generate (state:state) : collidable list =
   else if endY < 2049 then
     let tp = (get_tile_prob ~g:80 ~b:20 ()) in
     generate_green_blue_tiles state startY endY tp []
-  else 
+  else
     let tp = (get_tile_prob ~g:25 ~b:25 ~w:25 ~y:25 ()) in
     generate_green_blue_tiles state startY endY tp []
 

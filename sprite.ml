@@ -78,5 +78,4 @@ let update_animation (spr: sprite) =
 
 let update_max_ticks (spr:sprite) (coeff:float) =
   spr.params.max_ticks := int_of_float (coeff *. float_of_int !(spr.params.max_ticks))
-  
 

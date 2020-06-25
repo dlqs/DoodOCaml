@@ -3,7 +3,7 @@ open Object
 
 let pl_y_offset_ratio = 0.35
 
-let make (vx,vy) = 
+let make (vx,vy) =
   {
     pos = {x = 0; y = 0;};
     dim = {x = vx; y = vy};
@@ -16,7 +16,7 @@ let below_vpt (vpt:viewport) (collid:collidable) : bool =
 
 let above_vpt (vpt:viewport) (collid:collidable) : bool =
   let obj = (Object.get_obj collid) in
-  obj.pos.y > vpt.pos.y + vpt.dim.y 
+  obj.pos.y > vpt.pos.y + vpt.dim.y
 
 let in_vpt (vpt:viewport) (collid:collidable) : bool =
   (not (above_vpt vpt collid)) && (not (below_vpt vpt collid))
@@ -40,5 +40,3 @@ let move (vpt:viewport) (player:collidable) : viewport =
                                       )) in
   let y = max vpt.pos.y botY in
   { vpt with pos = { vpt.pos with y }}
-
-

@@ -33,9 +33,9 @@ let get_sprite = function
 let get_obj = function
   | Player (_,_,o) | Tile(_,_,o) | Item(_,_,o) -> o
 
-let make_player (typ:pl_typ) (pos:xy) (created_at:float) : collidable =  
+let make_player (typ:pl_typ) (pos:xy) (created_at:float) : collidable =
   match typ with
-  | Standing -> 
+  | Standing ->
      let po = { (setup ()) with
                 vel = { fx = 0.; fy = pl_jmp_vel };
                 pos;
@@ -50,7 +50,7 @@ let make_player (typ:pl_typ) (pos:xy) (created_at:float) : collidable =
               } in
      Player(Rocketing, Sprite.make PRocketing, po)
 
-let make_tile (typ:tile_typ) (pos:xy) (created_at:float) : collidable =  
+let make_tile (typ:tile_typ) (pos:xy) (created_at:float) : collidable =
   let sprite = match typ with
     | Green -> Sprite.make TGreen
     | Yellow -> Sprite.make TYellow
@@ -127,10 +127,10 @@ let update ?plt:p_t ?it:i_t ?tt:t_t
 
 let update_animation collid =
   Sprite.update_animation (get_sprite collid); collid
-     
+
 let update_max_ticks coeff collid =
   Sprite.update_max_ticks (get_sprite collid) coeff ; collid
-  
+
 let get_aabb collid =
   let spr = ((get_sprite collid).params) in
   let obj_st = get_obj collid in
@@ -153,8 +153,8 @@ let get_aabb_center collid =
 let bb_move (b: aabb) (v: fxy) : aabb =
   {
     b with pos = {
-      x = b.pos.x + (int_of_float v.fx); 
-      y = b.pos.y + (int_of_float v.fy); 
+      x = b.pos.x + (int_of_float v.fx);
+      y = b.pos.y + (int_of_float v.fy);
     }
   }
 
@@ -218,7 +218,7 @@ let rec update_player_keys controls collid =
                | CRight -> min (vel.fx +. pl_lat_vel) pl_max_lat_vel
                in
                update_player_keys t (update ~vel:{ vel with fx=fx } collid)
-          
+
 let update_debug_pt (co:collidable option) (player:collidable): collidable =
   match co with
   | Some ct -> update ~debug_pt:(Some (get_aabb_center ct)) player
@@ -257,7 +257,7 @@ let move state collid =
          fx = po.vel.fx *. friction_coef;
        } in
      update ~vel ~pos player
-  | Tile(Blue,ts,t_o) as tile -> 
+  | Tile(Blue,ts,t_o) as tile ->
      let pos = add_fxy_to_xy t_o.pos t_o.vel in
      let width = fst (get_sprite tile).params.bbox_size in
      let vel = bouncearound_x width vpt_width pos t_o.vel in
@@ -269,7 +269,7 @@ let do_collision c1 c2 =
   match c1 with
   | Player(plt, ps, po) as p ->
      begin match c2 with
-     | Tile(tt, ts, t_o) as t -> 
+     | Tile(tt, ts, t_o) as t ->
         if ((will_collide p t) &&
             (not (currently_colliding p t)) &&
             (po.vel.fy < 0.)
@@ -299,7 +299,7 @@ let find_closest_collidable player collids =
                   begin match it with
                   | Rocket | Monster ->
                      if (will_collide player item) then Some item else None
-                  | Spring -> 
+                  | Spring ->
                      if ((is_bbox_above player item) && (will_collide player item))
                      then Some item else None
                   end
@@ -317,11 +317,11 @@ let find_closest_collidable player collids =
   in
   helper None collids
 
-  
+
 let handle_collision state player collid =
   let po = get_obj player in
   match collid with
-  | Player(_,_,_) -> failwith "Player cannot collid with itself" 
+  | Player(_,_,_) -> failwith "Player cannot collid with itself"
   | Tile(tt,_,_) ->
      let killed = match tt with
        | White -> true
@@ -346,7 +346,7 @@ let handle_collision state player collid =
         then
           let collid = update ~killed:true collid in
           (player, collid)
-        else 
+        else
           let player = update ~killed:true player in
           (player, collid)
 
@@ -366,12 +366,12 @@ let update_player_collids state keys player collids : collidable * collidable li
   in
   match closest_collidable with
   | None -> (player |> move state, collids)
-  | Some closest_collidable -> 
+  | Some closest_collidable ->
      let (player, collided) = handle_collision state player closest_collidable in
      let collids = List.map (fun collid ->
                      if (get_obj collid).id = (get_obj collided).id then collided else collid) collids in
      (player, collids)
-      
+
 (* collid only (no collid-collid interactions) *)
 let update_collid state collid =
   match collid with
@@ -380,7 +380,7 @@ let update_collid state collid =
      tile |> move state
   | Tile(Yellow,_,t_o) as tile ->
      let explode_time = 8000. in
-     if state.time > t_o.created_at +. explode_time 
+     if state.time > t_o.created_at +. explode_time
        then tile |> update ~killed:true else
        tile |> update_animation
   | Tile(White,_,_) as tile ->

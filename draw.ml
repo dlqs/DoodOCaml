@@ -13,7 +13,7 @@ let render_debug_pt context collid (debug_pt: xy option) =
                context##lineTo (fi pt.x) (fi pt.y);
                context##stroke;
                ()
-                  
+
 let render state canvas collids =
   List.iter(fun collid ->
       let sprite = Object.get_sprite collid in
@@ -66,8 +66,4 @@ let clear_canvas canvas =
             (fi cw)
             (fi ch)
     )
-
-let _draw_background_color canvas = failwith "todo"
-let _debug f = Printf.ksprintf (fun s -> Firebug.console##log (jstr s)) f
-let _alert f = Printf.ksprintf (fun s -> Dom_html.window##alert(Js.string s); failwith "poo") f
 

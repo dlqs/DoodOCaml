@@ -11,7 +11,6 @@ let pressed_keys = {
   bbox = false;
 }
 
-
 (* Converts a keypress to a list of control keys, allowing more than one key
  * to be processed each frame. *)
 let translate_keys () =
@@ -20,7 +19,7 @@ let translate_keys () =
   List.fold_left (fun a x -> if fst x then (snd x)::a else a) [] ctrls
 
 let second_time = ref 0.
-let check_second time = 
+let check_second time =
   if time >= !second_time +. 1000. then
   (second_time := time; true ) else false
 
@@ -69,7 +68,7 @@ let update_player_collids state player collids =
 let update_collids state collids =
   if check_second state.time then
     collids |> List.map (Object.update_collid state)
-            |> List.map(Object.update_collid_second state) 
+            |> List.map(Object.update_collid_second state)
   else
     List.map (Object.update_collid state) collids
 
@@ -106,7 +105,7 @@ let start canvas =
       let state = state |> update_time time
                         |> update_draw_bb
                         |> update_viewport player
-                        |> update_generated_height 
+                        |> update_generated_height
                         |> update_score
       in
 
@@ -125,7 +124,7 @@ let start canvas =
       let (player,collids) = collids |> List.filter (Viewport.in_vpt state.vpt)
                                      |> update_player_collids state player
       in
-      let collids = collids |> update_collids state 
+      let collids = collids |> update_collids state
                             |> remove_collids state
       in
 
@@ -133,7 +132,7 @@ let start canvas =
       let pre_generated = pre_generated |> generate_collids state in
 
       (* Prepare next phase *)
-      ignore (Dom_html.window##requestAnimationFrame 
+      ignore (Dom_html.window##requestAnimationFrame
               (Js.wrap_callback (fun (next_time:float) ->
                game_loop next_time state player collids pre_generated));)
     end in
@@ -142,7 +141,7 @@ let start canvas =
   let cw = initial_state.vpt.dim.x and ch = initial_state.vpt.dim.y in
   let initial_player = Object.make_player Standing { x = cw/2; y = cw/8 } 0. in
   let initial_collids = if debug then Pg.generate_debug
-                        else Pg.generate initial_state 
+                        else Pg.generate initial_state
   in
   game_loop 0. initial_state initial_player [] initial_collids
 
