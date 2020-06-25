@@ -7,6 +7,10 @@ let pl_vel_x = 2.
 let pl_vel_max_x = 4.
 let pl_vel_max_y = 2.
 let pl_acc_y = 0.02
+let pol_acc_y = 0.6
+let pol_acc_x = 5.
+let pol_vel_x = 2.
+let pol_vel_fric_x = 0.01  (* coefficient of velocity along x axis only *)
 
 let id_counter = ref min_int
 
@@ -234,11 +238,25 @@ let move state collid =
   | Vehicle(Police, _, ps, vo) as veh ->
      let widthX = (fst ps.params.bbox_size) in
      let pos = clamp_x widthX vpt_width (add_fxy_to_xy vo.pos vo.vel) in
-     let vel = { fx = vo.vel.fx *. pl_vel_fric_x;
+     let vel = { fx = vo.vel.fx *. pol_vel_fric_x;
                  fy = min (vo.vel.fy +. pl_acc_y) pl_vel_max_y } in
      update ~pos ~vel veh
   | _ -> collid
 
+let update_police_player police player =
+  let pl_o = get_obj player in
+  let pol_o = get_obj police in
+  let fy = if (pol_o.pos.y > pl_o.pos.y
+                - snd (get_sprite player).params.bbox_size
+                - 10)
+    then pol_o.vel.fy -. pol_acc_y
+    else pol_o.vel.fy +. pol_acc_y in
+  let fx = if (pol_o.pos.x > pl_o.pos.x)
+    then pol_o.vel.fx -. pol_acc_x
+    else pol_o.vel.fx +. pol_acc_x in
+  Printf.printf "%f\n" fx;
+  let vel = { fx; fy; } in
+  update ~vel police
 
 let update_collids (state:state) (collids:collidable list) : collidable list =
   let collid_arr = Array.of_list collids in
@@ -283,6 +301,12 @@ let update_collids (state:state) (collids:collidable list) : collidable list =
         let vel = { vo.vel with fy = pl_vel_y *. 0.9 } in
         let player = update ~vel player in
         (player |> move state, c2)
+      | Vehicle(Police,_,_,_) as police ->
+        if (is_bbox_above player police) then
+        let vel = { vo.vel with fy = pl_vel_y + 5 } in
+        let player = update ~vel player in
+        (player |> move state, c2)
+        else 
       | _ -> (player |> move state, c2)
       end
     | Vehicle(Police,_,_,_) as police -> (police |> move state, c2)
@@ -306,5 +330,19 @@ let update_collids (state:state) (collids:collidable list) : collidable list =
 
 
 let update_collids_per_second state collids =
-  List.map (fun c -> c) collids
+  print_endline "Hello";
+  let collid_arr = Array.of_list collids in
+  Array.iteri (fun i c ->
+    match c with
+    | Vehicle(Player,_,_,_) as player ->
+      Array.iteri (fun i2 c2 ->
+        begin match c2 with
+        | Vehicle(Police,_,_,_) as police ->
+          let police = update_police_player police player in
+          Array.set collid_arr i2 police;
+        | _ -> () end
+      ) collid_arr
+    | _ -> ()
+  ) collid_arr;
+  Array.to_list collid_arr
 

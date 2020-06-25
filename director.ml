@@ -20,7 +20,7 @@ let translate_keys () =
   List.fold_left (fun a x -> if fst x then (snd x)::a else a) [] ctrls
 
 let second_time = ref 0.
-let check_second time = 
+let check_second time =
   if time >= !second_time +. 1000. then
   (second_time := time; true ) else false
 
@@ -73,8 +73,10 @@ let update_collids state player collids =
   (List.hd all_collids, List.tl all_collids)
 
 let update_collids_per_second state player collids =
-  let all_collids = Object.update_collids_per_second state (player::collids) in
-  (List.hd all_collids, List.tl all_collids)
+  if check_second state.time then
+    let all_collids = Object.update_collids_per_second state (player::collids) in
+    (List.hd all_collids, List.tl all_collids)
+  else (player, collids)
 
 let move_from_pre_generated state collids pre_generated =
   let move_in = pre_generated |> List.filter (fun c -> not (Viewport.above_vpt state.vpt c))
