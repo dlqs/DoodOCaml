@@ -185,12 +185,6 @@ let bb_collide (b1:aabb) (b2:aabb) : bool =
   else
     false
 
-(* Returns true if the collidables are currently colliding *)
-let currently_colliding c1 c2 =
-  let b1 = get_aabb c1 in
-  let b2 = get_aabb c2 in
-  bb_collide b1 b2
-
 (* Returns true if the collidables will collide based on their velocity vectors *)
 let will_collide c1 c2 =
   let b1 = get_aabb c1 in
@@ -263,28 +257,6 @@ let move state collid =
      let vel = bouncearound_x width vpt_width pos t_o.vel in
      update ~vel ~pos tile
   | _ -> failwith "Not implemented"
-
-(* One-body collision *)
-let do_collision c1 c2 =
-  match c1 with
-  | Player(plt, ps, po) as p ->
-     begin match c2 with
-     | Tile(tt, ts, t_o) as t ->
-        if ((will_collide p t) &&
-            (not (currently_colliding p t)) &&
-            (po.vel.fy < 0.)
-           )
-        then
-          let po = { po with vel = { po.vel with fy = pl_jmp_vel };
-                             pos = { x = (po.pos.x + (int_of_float (po.vel.fx/.2.)));
-                                     y = (po.pos.y + (int_of_float (po.vel.fy/.2.)))}
-                   } in
-          Player(plt, ps, po)
-        else
-          p
-     | _ -> c1
-     end
-  | _ -> c1
 
 let find_closest_collidable player collids =
   let rec helper current_closest collids =
@@ -375,7 +347,7 @@ let update_player_collids state keys player collids : collidable * collidable li
 (* collid only (no collid-collid interactions) *)
 let update_collid state collid =
   match collid with
-  | Player(_,_,_) as player -> failwith "Call update_player instead"
+  | Player(_,_,_) -> failwith "Call update_player instead"
   | Tile(Blue,_,_) as tile ->
      tile |> move state
   | Tile(Yellow,_,t_o) as tile ->

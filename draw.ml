@@ -1,7 +1,6 @@
 open Js_of_ocaml
 open Types
 
-let jstr = Js.string
 let fi = float_of_int
 
 let render_debug_pt context collid (debug_pt: xy option) =
@@ -36,7 +35,6 @@ let render state canvas collids =
                (fi dh)
         );
       if state.draw_bb then
-      let (bbox,bboy) = sprite.params.bbox_offset in
       let (bbsx,bbsy) = sprite.params.bbox_size in
       context##.strokeStyle := (Js.string "#FF0000");
       ignore(context##strokeRect
