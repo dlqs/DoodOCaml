@@ -33,6 +33,11 @@ let get_sprite = function
 let get_obj = function
   | Player (_,_,o) | Tile(_,_,o) | Item(_,_,o) -> o
 
+let is_invuln = function
+  | Player (t,_,_) -> t != Standing
+  | Tile (t,_,_) -> failwith "Tiles not supported"
+  | Item (t,_,_) -> failwith "Items not supported"
+
 let make_player (typ:pl_typ) (pos:xy) (created_at:float) : collidable =
   match typ with
   | Standing ->
@@ -345,6 +350,7 @@ let update_player_collids state keys player collids : collidable * collidable li
                       |> update_animation
                       |> update_player_typ state
   in
+  if (is_invuln player) then (player |> move state, collids) else
   match closest_collidable with
   | None -> (player |> move state, collids)
   | Some closest_collidable ->
