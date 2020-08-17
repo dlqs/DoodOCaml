@@ -56,7 +56,7 @@ let make (typ: sprite_typ) : sprite =
     | PStanding -> setup_sprite "doodle.png" 1 (ref 0) (30, 45) (0,0)
     | PRocketing ->setup_sprite "doodle.png" 2 (ref 10) (30, 45) (0,45)
     | IRocket ->   setup_sprite "items.png" 1 (ref 0) (20, 30) (0,0)
-    | ISpring ->   setup_sprite "items.png" ~bb_off:(0, 0) ~bb_sz:(15, 12) 1 (ref 0) (15, 10) (0,56)
+    | ISpring ->   setup_sprite "items.png" ~bb_off:(0, 0) ~bb_sz:(15, 13) 1 (ref 0) (15, 10) (0,56)
     | IMonster ->  setup_sprite "items.png" ~bb_off:(0, 0) ~bb_sz:(38, 25) 1 (ref 0) (38, 25) (0,31)
     | TGreen ->    setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 (ref 0) (40, 10) (0,0)
     | TBlue ->     setup_sprite "tiles.png" ~bb_off:(0, 0) ~bb_sz:(40, 9) 1 (ref 0) (40, 10) (0,10)
