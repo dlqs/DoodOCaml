@@ -77,7 +77,7 @@ let rec place_items state tiles ip items =
       if (tt != Green) then place_items state rest_tiles ip items else
       let p = Random.float 1.0 in
       let q = int_of_float (100.0 *. p) in
-      if q <= 20 then
+      if q <= 30 then
       let tile_pos = t_o.pos in
       let pos = { tile_pos with y = tile_pos.y + tile_height } in
       let it = choose_item_typ ip in
@@ -92,7 +92,7 @@ let generate (state:state) : collidable list =
   let endY = state.next_generated_height in
   if endY < 1500 then
     let tp = (get_tile_prob ~g:90 ~b:10 ()) in
-    let ip = (get_item_prob ~r:20 ~s:60 ~m:20 ()) in
+    let ip = (get_item_prob ~r:25 ~s:60 ~m:15 ()) in
     let tiles = generate_tiles state startY endY tp [] in
     let items = place_items state tiles ip [] in
     tiles@items
@@ -116,7 +116,7 @@ let generate (state:state) : collidable list =
     tiles@items
   else
     let tp = (get_tile_prob ~g:15 ~b:15 ~w:35 ~y:35 ()) in
-    let ip = (get_item_prob ~r:20 ~s:50 ~m:30 ()) in
+    let ip = (get_item_prob ~r:20 ~s:30 ~m:50 ()) in
     let tiles = generate_tiles state startY endY tp [] in
     let items = place_items state tiles ip [] in
     tiles@items
